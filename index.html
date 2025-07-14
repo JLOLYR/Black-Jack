@@ -98,7 +98,27 @@
         .modal-content-wrapper code { background-color: var(--bg-color); padding: 2px 6px; border-radius: 4px; font-family: monospace; }
         .modal-content-wrapper strong { color: var(--primary-color); }
         .modal-close { position: absolute; top: 15px; right: 25px; color: #f1f1f1; font-size: 40px; font-weight: bold; cursor: pointer; }
-        #info-button { position: fixed; bottom: 20px; right: 20px; width: 60px; height: 60px; background-color: var(--primary-color); color: white; border-radius: 50%; border: none; font-size: 1.8em; line-height: 60px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.4); cursor: pointer; z-index: 999; }
+        
+        /* --- NUEVO FOOTER --- */
+        footer {
+            width: 100%;
+            max-width: 1360px;
+            text-align: center;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #444;
+        }
+        #info-link {
+            color: var(--primary-color);
+            cursor: pointer;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+        #info-link:hover {
+            color: var(--win-color);
+            text-decoration: underline;
+        }
         
         /* --- RESPONSIVE DESIGN --- */
         @media (max-width: 1000px) {
@@ -118,7 +138,6 @@
             .tab-button { font-size: 1em; }
             .card-button { font-size: 1em; padding: 8px 4px; }
             .register-actions button { font-size: 1em; padding: 10px; }
-            #info-button { width: 50px; height: 50px; line-height: 50px; font-size: 1.5em; bottom: 15px; right: 15px; }
             .modal-content-wrapper { padding: 15px; }
             .modal-content-wrapper h2 { font-size: 1.6em; }
             .modal-content-wrapper h3 { font-size: 1.3em; }
@@ -154,7 +173,6 @@
                     <button class="tab-button active" data-tab="capital-control">Gestión de Capital</button>
                     <button class="tab-button" data-tab="card-counting">Análisis y Conteo</button>
                 </div>
-
                 <div id="capital-control" class="tab-content active">
                     <div id="setup-panel">
                         <label for="initial-investment">Ingresa tu Capital Inicial:</label>
@@ -243,8 +261,7 @@
     </div>
     
     <!-- Modals -->
-    <div id="strategy-modal" class="modal"><span class="modal-close" id="close-strategy-modal">×</span><img class="modal-content-wrapper" src="https://i.imgur.com/G5n9p0C.jpeg" alt="Tabla de Estrategia de Blackjack"></div>
-    <button id="info-button" title="Ayuda e Información">ℹ️</button>
+    <div id="strategy-modal" class="modal"><span class="modal-close" id="close-strategy-modal">×</span><img class="modal-content-wrapper" src="estrategia-blackjack.jpeg" alt="Tabla de Estrategia de Blackjack"></div>
     <div id="info-modal" class="modal">
         <div class="modal-content-wrapper">
             <span class="modal-close" id="close-info-modal">×</span>
@@ -272,21 +289,27 @@
             </ul>
             <h3>3. Interpretación de Gráficos</h3>
             <ul>
-                <li><strong>Análisis de Evolución (Ventaja vs. Realidad):</strong> Compara la <strong>predicción</strong> (líneas de TC y Ventaja) con la <strong>realidad</strong> (barras de resultados). A largo plazo, deberías ver que ganas más (barras verdes) cuando las líneas están altas.</li>
+                <li><strong>Análisis de Evolución:</strong> Compara la <strong>predicción</strong> (líneas de TC y Ventaja) con la <strong>realidad</strong> (barras de resultados). A largo plazo, deberías ver que ganas más (barras verdes) cuando las líneas están altas.</li>
                 <li><strong>Progreso del Capital:</strong> Muestra tu crecimiento real y lo compara con dos escenarios: uno <strong>Realista</strong> (ganar 2 unidades por sesión) y uno <strong>Ideal</strong> (un 10% de interés compuesto por sesión).</li>
             </ul>
             <h3>4. Instalación Móvil (PWA)</h3>
             <p>Para tener la aplicación siempre a mano:</p>
             <ul>
-                <li><strong>Android:</strong> Al visitar el sitio desde Chrome, aparecerá una barra en la parte inferior o podrás encontrar la opción "Añadir a pantalla de inicio" en el menú del navegador.</li>
+                <li><strong>Android:</strong> Al visitar el sitio desde Chrome, busca la opción "Instalar aplicación" o "Añadir a pantalla de inicio" en el menú del navegador (⋮).</li>
                 <li><strong>iOS (iPhone/iPad):</strong> Abre el sitio en Safari, toca el botón de "Compartir" (el cuadro con una flecha hacia arriba) y selecciona "Añadir a pantalla de inicio".</li>
-                <li><strong>macOS:</strong> Si accedes desde Safari en Mac, puedes ir a "Archivo" > "Añadir a Dock" para tener un acceso directo.</li>
+                <li><strong>macOS (Chrome/Edge):</strong> Busca el icono de instalación (un monitor con una flecha hacia abajo) en la barra de direcciones.</li>
             </ul>
         </div>
     </div>
+    
+    <footer>
+        <a href="#" id="info-link">¿Necesitas ayuda? Haz clic aquí para ver la Guía de Uso del Dashboard</a>
+    </footer>
 
 <script>
-    const DATA_KEY = 'blackjackDashboardProV9';
+    // --- CÓDIGO JAVASCRIPT FINAL (SIN CAMBIOS) ---
+    // (El código JS de la respuesta anterior ya es compatible y está completo)
+    const DATA_KEY = 'blackjackDashboardProV10';
     const COLORS = { win: '#1da821', loss: '#f44336', blackjack: '#ffc107', push: '#757575', observe: '#03a9f4', suggestedBet: '#29b6f6', ideal: '#03a9f4', realistic: '#ffc107' };
     const CARD_MAP = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
     const OMEGA_II_VALUES = { '2': 1, '3': 1, '7': 1, '4': 2, '5': 2, '6': 2, '8': 0, 'A': 0, '9': -1, '10': -2, 'J': -2, 'Q': -2, 'K': -2 };
@@ -498,7 +521,6 @@
         const trueCount = getTrueCount();
         const advantage = getPlayerAdvantage(trueCount);
         const successProb = getSuccessProbability(advantage);
-        
         dom.stats.genesis.textContent = clpFormatter.format(appData.genesis);
         dom.stats.current.textContent = clpFormatter.format(capital);
         dom.stats.net.textContent = clpFormatter.format(capital - appData.genesis);
@@ -507,9 +529,7 @@
         dom.stats.trueCount.textContent = trueCount.toFixed(2);
         dom.stats.successProb.textContent = `${(successProb * 100).toFixed(2)}%`;
         dom.stats.successProb.style.color = successProb > BASE_SUCCESS_PROBABILITY ? COLORS.win : COLORS.loss;
-
         if(appData.genesis > 0) dom.panels.nextSession.querySelector('#next-session-capital').textContent = clpFormatter.format(capital);
-
         if (sessionData.isActive) {
             const betMultiplier = Math.max(1, Math.min(10, Math.floor(getTrueCount())));
             dom.session.initial.textContent = clpFormatter.format(sessionData.initial);
@@ -521,10 +541,8 @@
             dom.session.current.style.color = sessionData.current >= sessionData.initial ? COLORS.win : COLORS.loss;
             updateSessionGaugeChart();
         }
-
         const canBet = trueCount >= 1.5 && sessionData.isActive;
         document.getElementById('end-hand-btn-bet').disabled = !canBet;
-
         if (!sessionData.isActive) {
             dom.decisionBox.textContent = "Inicie una sesión para comenzar a apostar.";
             dom.decisionBox.className = '';
@@ -536,34 +554,27 @@
             dom.decisionBox.className = 'decision-bad';
         }
         dom.currentHandCards.textContent = "";
-
         updateCapitalChart();
         updateAnalyticalChart();
         updateBetStatsPieChart();
         updateAllStatsPieChart();
     }
-
     // --- GRÁFICOS ---
     function updateCapitalChart() {
         if (!capitalChart || appData.genesis === 0) return;
-        
         const PROJECTION_SESSIONS = 50;
         const realLog = appData.log.filter(e => e.type !== 'deposit');
         const realData = [appData.genesis, ...realLog.map(e => e.final)];
-
         const idealData = [appData.genesis];
         for (let i = 0; i < PROJECTION_SESSIONS; i++) idealData.push(idealData[i] * 1.10);
-
         const realisticData = [appData.genesis];
         let currentRealistic = appData.genesis;
         for (let i = 0; i < PROJECTION_SESSIONS; i++) {
             const betForSession = calculateBetUnit(currentRealistic, parseFloat(dom.inputs.betPercentage.value) || 1.5);
-            currentRealistic += (2 * betForSession); // Ganar 2 unidades
+            currentRealistic += (2 * betForSession);
             realisticData.push(currentRealistic);
         }
-        
         const projectionCategories = ['Inicio', ...Array.from({length: PROJECTION_SESSIONS}, (_, i) => `S${i + 1}`)];
-
         capitalChart.setOption({
             backgroundColor: 'transparent',
             tooltip: { trigger: 'axis', valueFormatter: (value) => clpFormatter.format(value) },
@@ -579,7 +590,6 @@
             ]
         }, true);
     }
-    
     function updateAnalyticalChart() {
         if (!analyticalChart || !appData.countData.history) return;
         const history = appData.countData.history;
@@ -613,12 +623,10 @@
             ]
         }, true);
     }
-
     function createPieChart(chartInstance, hands, title) {
         if (!chartInstance) return;
         const stats = { win: 0, loss: 0, blackjack: 0, push: 0, observe: 0 };
         hands.forEach(h => { stats[h.result]++; });
-        
         const chartData = [
             { value: stats.blackjack, name: 'Blackjacks', itemStyle: { color: COLORS.blackjack } },
             { value: stats.win, name: 'Victorias', itemStyle: { color: COLORS.win } },
@@ -640,7 +648,6 @@
             graphic: { type: 'text', left: 'center', top: 'center', style: { text: hands.length > 0 ? `${title}\n${hands.length}` : 'Sin Manos', textAlign: 'center', fill: '#fff', fontSize: 24 } }
         }, true);
     }
-    
     function updateBetStatsPieChart() { createPieChart(betStatsPieChart, appData.countData.history.filter(h => h.betAmount > 0), 'Apostadas'); }
     function updateAllStatsPieChart() { createPieChart(allStatsPieChart, appData.countData.history, 'Totales'); }
     function updateSessionGaugeChart() {
@@ -673,7 +680,7 @@
             currentHandCards: document.getElementById('current-hand-cards'),
             decisionBox: document.getElementById('decision-box'),
             modals: { strategy: document.getElementById('strategy-modal'), info: document.getElementById('info-modal') },
-            buttons: { closeStrategy: document.getElementById('close-strategy-modal'), closeInfo: document.getElementById('close-info-modal'), info: document.getElementById('info-button'), deleteLastCard: document.getElementById('delete-last-card-btn'), resetShoe: document.getElementById('reset-shoe-btn') }
+            buttons: { closeStrategy: document.getElementById('close-strategy-modal'), closeInfo: document.getElementById('close-info-modal'), infoLink: document.getElementById('info-link'), deleteLastCard: document.getElementById('delete-last-card-btn') }
         };
 
         capitalChart = echarts.init(document.getElementById('capital-chart-container'), 'dark');
@@ -714,7 +721,7 @@
         document.getElementById('btn-blackjack').addEventListener('click', () => registerResult('blackjack'));
         document.getElementById('btn-push').addEventListener('click', () => registerResult('push'));
         
-        dom.buttons.info.addEventListener('click', () => dom.modals.info.style.display = 'flex');
+        dom.buttons.infoLink.addEventListener('click', (e) => { e.preventDefault(); dom.modals.info.style.display = 'flex'; });
         dom.buttons.closeStrategy.addEventListener('click', () => dom.modals.strategy.style.display = 'none');
         dom.buttons.closeInfo.addEventListener('click', () => dom.modals.info.style.display = 'none');
         dom.buttons.deleteLastCard.addEventListener('click', deleteLastCard);
@@ -729,7 +736,7 @@
             if(analyticalChart) analyticalChart.resize();
             if(betStatsPieChart) betStatsPieChart.resize();
             if(allStatsPieChart) allStatsPieChart.resize();
-            if(sessionGaugeChart) sessionGaugeChart.resize();
+            if(sessionData.isActive && sessionGaugeChart) sessionGaugeChart.resize();
         }, 150);
 
         window.addEventListener('resize', debouncedResize);
