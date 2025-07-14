@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard de Crecimiento en Blackjack</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <style>
+        :root {
+            --bg-color: #1a1a1a;
+            --surface-color: #2c2c2c;
+            --primary-color: #53b040;
+            --text-color: #e0e0e0;
+            --win-color: #1da821;
+            --loss-color: #f44336;
+            --blackjack-color: #ffc107;
+            --push-color: #757575;
+            --ideal-color: #03a9f4;
+            --realistic-color: var(--blackjack-color);
+        }
+        body { font-family: 'Roboto', sans-serif; background-color: var(--bg-color); color: var(--text-color); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; gap: 20px; }
+        .main-container { display: flex; flex-wrap: wrap; gap: 20px; width: 100%; max-width: 1300px; }
+        .column { display: flex; flex-direction: column; gap: 20px; }
+        .left-column { flex: 1; min-width: 380px; }
+        .right-column { flex: 2; min-width: 500px; }
+        .panel { background-color: var(--surface-color); padding: 25px; border-radius: 12px; box-shadow: 0 5px 20px rgba(0, 0, 0, 0.4); }
+        h1, h2 { color: var(--primary-color); text-align: center; margin-top: 0; }
+        label { display: block; margin-top: 15px; font-size: 1em; font-weight: 500; color: #b0b0b0; }
+        input[type="number"] { width: 100%; padding: 12px; margin-top: 8px; border-radius: 8px; border: 1px solid #444; background-color: #333; color: #fff; box-sizing: border-box; font-size: 1.1em; }
+        button { width: 100%; padding: 15px; margin-top: 25px; border: none; border-radius: 8px; background-color: var(--primary-color); color: white; font-size: 1.2em; font-weight: bold; cursor: pointer; transition: all 0.3s ease; }
+        button:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(83, 176, 64, 0.3); }
+        button:disabled { background-color: #555; color: #888; cursor: not-allowed; transform: none; box-shadow: none; }
+        .hidden { display: none; }
+        .chart-container { width: 100%; height: 400px; }
+        #session-chart-container { width: 100%; height: 380px; }
+        #stats-pie-chart { width: 100%; height: 300px; }
+
+        .title-container { display: flex; justify-content: center; align-items: center; gap: 15px; margin-bottom: 20px;}
+        .icon-btn { background-color: transparent; border: 1px solid var(--primary-color); color: var(--primary-color); padding: 5px 10px; font-size: 1.5em; margin: 0; min-width: 50px; width: auto; line-height: 1; }
+        .icon-btn:hover { background-color: var(--primary-color); color: var(--bg-color); }
+        #reset-app-btn { border-color: var(--loss-color); color: var(--loss-color); }
+        #reset-app-btn:hover { background-color: var(--loss-color); color: white; }
+        #dashboard-stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; text-align: center; }
+        .stat h3 { margin: 0 0 5px 0; color: var(--primary-color); font-size: 1em; text-transform: uppercase; }
+        .stat p { margin: 0; font-size: 1.8em; font-weight: bold; }
+
+        .session-info p { font-size: 1.2em; margin: 12px 0; border-bottom: 1px solid #444; padding-bottom: 12px; display: flex; justify-content: space-between; }
+        .session-info span { font-weight: bold; }
+        .action-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
+        .action-buttons button { margin-top: 0; font-size: 1em; }
+        #btn-blackjack { background-color: var(--blackjack-color); color: black; grid-column: 1 / -1; }
+        #btn-win { background-color: var(--win-color); color: white; }
+        #btn-lose { background-color: var(--loss-color); color: white; }
+        #btn-push { background-color: var(--push-color); color: white; grid-column: 1 / -1; }
+        
+        #end-session-btn { background-color: #ff9800; color:black; margin-top: 15px; }
+
+        #add-funds-container { border-top: 2px dashed #444; margin-top: 20px; padding-top: 15px; }
+        #add-funds-btn { font-size: 0.9em; padding: 10px; margin-top: 10px; background-color: var(--win-color); color: white; }
+        
+        #start-first-session,
+        #start-new-session { background-color: var(--win-color); color: white; }
+        
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.85); justify-content: center; align-items: center; }
+        .modal-content { margin: auto; display: block; max-width: 90%; max-height: 90%; }
+        .modal-close { position: absolute; top: 25px; right: 45px; color: #f1f1f1; font-size: 40px; font-weight: bold; transition: 0.3s; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <div class="panel" style="width: 100%; max-width: 1260px; box-sizing: border-box;">
+        <div class="title-container">
+            <button class="icon-btn" id="show-strategy-btn" title="Mostrar Tabla de Estrategia">🂡</button>
+            <h2>Dashboard de Crecimiento</h2>
+            <button class="icon-btn" id="reset-app-btn" title="Reiniciar Aplicación">🔄</button>
+        </div>
+        <div id="dashboard-stats">
+            <div class="stat"><h3>Capital Inicial (Génesis)</h3><p id="genesis-capital">$0</p></div>
+            <div class="stat"><h3>Capital Actual</h3><p id="current-capital">$0</p></div>
+            <div class="stat"><h3>Ganancia/Pérdida Neta</h3><p id="net-profit">$0</p></div>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <div class="column left-column">
+            <div class="panel">
+                <h2 id="panel-title">Control de Sesión</h2>
+                <div id="setup"><label for="initial-investment">Ingresa tu Capital Inicial para comenzar:</label><input type="number" id="initial-investment" placeholder="Ej: 50000"><button id="start-first-session">¡Comenzar Aventura!</button></div>
+                <div id="next-session-prompt" class="hidden">
+                    <p>Capital para esta sesión: <strong id="next-session-capital" style="color: var(--primary-color);"></strong>.</p>
+                    <label for="bet-percentage">Porcentaje de apuesta por mano (%):</label><input type="number" id="bet-percentage" value="2">
+                    <!-- Nuevos campos para la estrategia -->
+                    <label for="stop-win-units">Meta de Ganancia (en Unidades de Apuesta):</label><input type="number" id="stop-win-units" value="3">
+                    <label for="stop-loss-units">Límite de Pérdida (en Unidades de Apuesta):</label><input type="number" id="stop-loss-units" value="5">
+                    
+                    <button id="start-new-session">Iniciar Sesión</button>
+                    <div id="add-funds-container">
+                        <label for="add-funds-input">¿Añadir fondos al capital?</label>
+                        <input type="number" id="add-funds-input" placeholder="Monto a depositar">
+                        <button id="add-funds-btn">Depositar</button>
+                    </div>
+                </div>
+                <div id="session-tracker" class="hidden">
+                    <div class="session-info">
+                        <p>Capital Sesión: <span id="session-initial-balance"></span></p>
+                        <p>Apuesta Fija: <span id="session-bet-amount"></span></p>
+                        <p style="color: var(--win-color);">Meta (Stop-Win): <span id="session-win-target"></span></p>
+                        <p style="color: var(--loss-color);">Límite (Stop-Loss): <span id="session-loss-target"></span></p>
+                        <p>Saldo Actual: <span id="session-current-balance"></span></p>
+                    </div>
+                    <div class="action-buttons">
+                        <button id="btn-blackjack">GANÉ (BLACKJACK 3:2)</button><button id="btn-win">GANÉ (1:1)</button><button id="btn-lose">PERDÍ</button><button id="btn-push">EMPATE (PUSH)</button>
+                    </div>
+                    <button id="end-session-manually">Terminar Sesión Manualmente</button>
+                </div>
+            </div>
+            <div class="panel" id="stats-panel">
+                <h2>Estadísticas Globales</h2>
+                <div id="stats-pie-chart"></div>
+            </div>
+        </div>
+        <div class="column right-column">
+            <div class="panel"><div class="chart-container" id="projection-chart-container"></div></div>
+            <div class="panel hidden" id="session-chart-panel"><div id="session-chart-container"></div></div>
+        </div>
+    </div>
+    
+    <div id="strategy-modal" class="modal"><span class="modal-close" id="modal-close-btn">×</span><img class="modal-content" src="estrategia-blackjack.jpg" alt="Tabla de Estrategia de Blackjack"></div>
+
+<script>
+    const PROJECTION_SESSIONS = 100, DATA_KEY = 'blackjackDashboardData';
+    const COLORS = { win: '#1da821', loss: '#f44336', blackjack: '#ffc107', push: '#757575', ideal: '#03a9f4', realistic: '#ffc107' };
+    const clpFormatter = new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', minimumFractionDigits: 0, maximumFractionDigits: 0 });
+    let sessionData = { initial: 0, current: 0, bet: 0, winTarget: 0, lossTarget: 0 };
+    let appData = { genesis: 0, log: [], stats: { win: 0, lose: 0, blackjack: 0, push: 0 } };
+    
+    const dom = {
+        dashboard: { genesis: document.getElementById('genesis-capital'), current: document.getElementById('current-capital'), net: document.getElementById('net-profit') },
+        setup: document.getElementById('setup'),
+        nextSession: { div: document.getElementById('next-session-prompt'), capital: document.getElementById('next-session-capital'), addFundsInput: document.getElementById('add-funds-input'), betPercentage: document.getElementById('bet-percentage'), stopWinUnits: document.getElementById('stop-win-units'), stopLossUnits: document.getElementById('stop-loss-units')},
+        session: { div: document.getElementById('session-tracker'), initial: document.getElementById('session-initial-balance'), bet: document.getElementById('session-bet-amount'), current: document.getElementById('session-current-balance'), winTarget: document.getElementById('session-win-target'), lossTarget: document.getElementById('session-loss-target') },
+        initialInput: document.getElementById('initial-investment'),
+        buttons: { startFirst: document.getElementById('start-first-session'), startNew: document.getElementById('start-new-session'), endManually: document.getElementById('end-session-manually'), blackjack: document.getElementById('btn-blackjack'), win: document.getElementById('btn-win'), lose: document.getElementById('btn-lose'), push: document.getElementById('btn-push'), reset: document.getElementById('reset-app-btn'), showStrategy: document.getElementById('show-strategy-btn'), addFunds: document.getElementById('add-funds-btn') },
+        charts: { projectionPanel: document.getElementById('projection-chart-container'), sessionPanel: document.getElementById('session-chart-panel'), sessionContainer: document.getElementById('session-chart-container'), statsPie: document.getElementById('stats-pie-chart') },
+        modal: { div: document.getElementById('strategy-modal'), close: document.getElementById('modal-close-btn') }
+    };
+    let projectionChart, sessionChart, statsChart;
+
+    function saveData() { localStorage.setItem(DATA_KEY, JSON.stringify(appData)); }
+    function loadData() {
+        const storedData = localStorage.getItem(DATA_KEY);
+        if (storedData) {
+            appData = JSON.parse(storedData);
+            if (!appData.stats) appData.stats = { win: 0, lose: 0, blackjack: 0, push: 0 };
+            
+            dom.setup.classList.add('hidden'); dom.nextSession.div.classList.remove('hidden');
+            dom.nextSession.capital.textContent = clpFormatter.format(getCurrentCapital());
+        } else {
+            dom.setup.classList.remove('hidden'); dom.nextSession.div.classList.add('hidden');
+        }
+        updateDashboard(); updateProjectionChart(); updateStatsChart();
+    }
+    
+    function resetApplication() {
+        if (confirm('¿Estás SEGURO de que quieres reiniciar? Se borrará todo tu historial.')) { if (confirm('Última advertencia: Esta acción no se puede deshacer. ¿Borrar todo?')) { localStorage.removeItem(DATA_KEY); location.reload(); } }
+    }
+
+    function addFunds() {
+        const fundsToAdd = parseFloat(dom.nextSession.addFundsInput.value);
+        if (isNaN(fundsToAdd) || fundsToAdd <= 0) { alert("Por favor, ingresa un monto válido para depositar."); return; }
+        const lastBalance = getCurrentCapital();
+        appData.log.push({ type: 'deposit', amount: fundsToAdd, initial: lastBalance, final: lastBalance + fundsToAdd });
+        saveData(); dom.nextSession.addFundsInput.value = ''; loadData();
+    }
+
+    function getCurrentCapital() { return appData.log.length > 0 ? appData.log[appData.log.length - 1].final : appData.genesis; }
+    
+    function calculateBet(capital, percentage) { return Math.max(1000, Math.floor((capital * (percentage / 100)) / 1000) * 1000); }
+
+    function startFirstSession() {
+        const genesisAmount = parseFloat(dom.initialInput.value);
+        if (isNaN(genesisAmount) || genesisAmount <= 0) { alert('Por favor, ingresa un monto inicial válido.'); return; }
+        appData.genesis = genesisAmount;
+        saveData(); loadData();
+    }
+
+    function startNewSession() {
+        const lastBalance = getCurrentCapital();
+        const percentage = parseFloat(dom.nextSession.betPercentage.value) || 2;
+        const betAmount = calculateBet(lastBalance, percentage);
+        const winUnits = parseInt(dom.nextSession.stopWinUnits.value) || 3;
+        const lossUnits = parseInt(dom.nextSession.stopLossUnits.value) || 5;
+
+        sessionData = { initial: lastBalance, current: lastBalance, bet: betAmount, winTarget: lastBalance + (winUnits * betAmount), lossTarget: lastBalance - (lossUnits * betAmount) };
+        
+        dom.nextSession.div.classList.add('hidden'); dom.session.div.classList.remove('hidden'); dom.charts.sessionPanel.classList.remove('hidden');
+        
+        setTimeout(() => { sessionChart.resize(); updateSessionChart(); }, 0);
+        updateSessionDisplay();
+    }
+
+    function handleHand(outcome) {
+        switch(outcome) {
+            case 'blackjack': sessionData.current += sessionData.bet * 1.5; appData.stats.blackjack++; break;
+            case 'win': sessionData.current += sessionData.bet; appData.stats.win++; break;
+            case 'lose': sessionData.current -= sessionData.bet; appData.stats.lose++; break;
+            case 'push': appData.stats.push++; break;
+        }
+        
+        updateSessionDisplay(); updateSessionChart(); updateStatsChart();
+        checkSessionLimits();
+    }
+
+    function checkSessionLimits() {
+        if (sessionData.current >= sessionData.winTarget) {
+            alert(`¡Meta de Ganancia Alcanzada! Sesión terminada.`);
+            endSession();
+        } else if (sessionData.current <= sessionData.lossTarget) {
+            alert(`Límite de Pérdida Alcanzado. Sesión terminada.`);
+            endSession();
+        }
+    }
+
+    function endSession(manual = false) {
+        if (manual && !confirm("¿Seguro que quieres terminar la sesión manualmente antes de alcanzar un límite?")) return;
+        
+        appData.log.push({ initial: sessionData.initial, final: sessionData.current });
+        saveData();
+        dom.session.div.classList.add('hidden'); dom.charts.sessionPanel.classList.add('hidden');
+        loadData();
+    }
+
+    function updateDashboard() {
+        if (!appData || appData.genesis === 0) return;
+        const currentCapital = getCurrentCapital();
+        const netProfit = currentCapital - appData.genesis;
+        dom.dashboard.genesis.textContent = clpFormatter.format(appData.genesis);
+        dom.dashboard.current.textContent = clpFormatter.format(currentCapital);
+        dom.dashboard.net.textContent = clpFormatter.format(netProfit);
+        dom.dashboard.net.style.color = netProfit >= 0 ? COLORS.win : COLORS.loss;
+    }
+
+    function updateSessionDisplay() {
+        dom.session.initial.textContent = clpFormatter.format(sessionData.initial);
+        dom.session.bet.textContent = clpFormatter.format(sessionData.bet);
+        dom.session.current.textContent = clpFormatter.format(sessionData.current);
+        dom.session.winTarget.textContent = clpFormatter.format(sessionData.winTarget);
+        dom.session.lossTarget.textContent = clpFormatter.format(sessionData.lossTarget);
+        dom.session.current.style.color = sessionData.current >= sessionData.initial ? COLORS.win : COLORS.loss;
+    }
+
+    function updateProjectionChart() {
+        if (!appData || appData.genesis === 0) { projectionChart.clear(); return; }
+        const categories = ['Inicio', ...Array.from({length: PROJECTION_SESSIONS}, (_, i) => `S${i + 1}`)];
+        
+        const idealData = [appData.genesis];
+        for (let i = 0; i < PROJECTION_SESSIONS; i++) idealData.push(idealData[i] * 1.10);
+        
+        const realData = [appData.genesis];
+        appData.log.forEach(entry => {
+            if (entry.type === 'deposit') { realData[realData.length - 1] = entry.final; } 
+            else { realData.push(entry.final); }
+        });
+
+        const realisticData = [appData.genesis];
+        let currentRealistic = appData.genesis;
+        for (let i = 0; i < PROJECTION_SESSIONS; i++) {
+            const betForSession = calculateBet(currentRealistic, parseFloat(dom.nextSession.betPercentage.value) || 2);
+            currentRealistic += (2 * betForSession); // Objetivo realista: ganar 2 unidades
+            realisticData.push(currentRealistic);
+        }
+        
+        projectionChart.setOption({
+            backgroundColor: 'transparent', title: { text: 'Progreso de Capital', textStyle: { color: '#e0e0e0' } },
+            tooltip: { trigger: 'axis' }, legend: { data: ['Balance Real', 'Proyección Realista', 'Proyección Ideal (10%)'], textStyle: { color: '#ccc' } },
+            grid: { left: '3%', right: '4%', bottom: '15%', containLabel: true },
+            xAxis: { type: 'category', boundaryGap: false, data: categories }, yAxis: { type: 'value', axisLabel: { formatter: (value) => clpFormatter.format(value) } },
+            dataZoom: [ { type: 'slider', start: 0, end: 10, bottom: 10 }, { type: 'inside' } ],
+            series: [
+                { name: 'Balance Real', type: 'line', smooth: true, data: realData, itemStyle: { color: COLORS.win }, lineStyle: { width: 3 } },
+                { name: 'Proyección Realista', type: 'line', smooth: true, data: realisticData.map(Math.floor), itemStyle: { color: COLORS.realistic }, lineStyle: { type: 'solid', opacity: 0.8 } },
+                { name: 'Proyección Ideal (10%)', type: 'line', smooth: true, data: idealData.map(Math.floor), itemStyle: { color: COLORS.ideal }, lineStyle: { type: 'dashed' } }
+            ]
+        }, true);
+    }
+
+    function updateSessionChart() {
+        const profit = sessionData.current - sessionData.initial;
+        const percentage = sessionData.initial > 0 ? (Math.abs(profit) / (sessionData.bet * 5)) * 100 * (profit > 0 ? 1 : -1) : 0; // Escala relativa al stop-loss
+        const dynamicColor = profit >= 0 ? COLORS.win : COLORS.loss;
+        sessionChart.setOption({
+            backgroundColor: 'transparent',
+            series: [{
+                type: 'gauge', startAngle: 180, endAngle: 0, min: -100, max: 60, splitNumber: 8,
+                progress: { show: true, roundCap: true, width: 18, itemStyle: { color: dynamicColor } },
+                pointer: { show: false }, axisLine: { lineStyle: { width: 18, color: [[1, '#444']] } },
+                axisTick: { show: false }, splitLine: { show: false }, axisLabel: { show: false }, title: { show: false },
+                detail: {
+                    offsetCenter: [0, '0%'], valueAnimation: true,
+                    formatter: (value) => `{profit|${clpFormatter.format(profit)}}`,
+                    rich: { profit: { fontSize: 36, fontWeight: 'bolder', color: dynamicColor } }
+                },
+                data: [{ value: parseFloat(percentage.toFixed(1)) }]
+            }]
+        }, true);
+    }
+    
+    function updateStatsChart() {
+        if (!appData.stats) return;
+        const totalHands = Object.values(appData.stats).reduce((a, b) => a + b, 0);
+        
+        statsChart.setOption({
+            backgroundColor: 'transparent',
+            tooltip: { trigger: 'item', formatter: '{b}: {c} ({d}%)' },
+            legend: { top: '5%', left: 'center', textStyle: { color: '#ccc' } },
+            series: [{
+                name: 'Resultados', type: 'pie', radius: ['50%', '70%'], avoidLabelOverlap: false,
+                itemStyle: { borderRadius: 10, borderColor: 'var(--surface-color)', borderWidth: 2 },
+                label: { show: totalHands > 0, position: 'inside', formatter: '{d}%', color: '#fff', fontSize: 14, fontWeight: 'bold' },
+                labelLine: { show: false },
+                data: [
+                    { value: appData.stats.blackjack, name: 'Blackjacks', itemStyle: { color: COLORS.blackjack } },
+                    { value: appData.stats.win, name: 'Victorias', itemStyle: { color: COLORS.win } },
+                    { value: appData.stats.lose, name: 'Derrotas', itemStyle: { color: COLORS.loss } },
+                    { value: appData.stats.push, name: 'Empates', itemStyle: { color: COLORS.push } }
+                ]
+            }],
+            graphic: { type: 'text', left: 'center', top: 'center', style: { text: totalHands > 0 ? `Total\n${totalHands}` : 'Sin Manos', textAlign: 'center', fill: '#fff', fontSize: 24 } }
+        }, true);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        projectionChart = echarts.init(dom.charts.projectionPanel, 'dark');
+        sessionChart = echarts.init(dom.charts.sessionContainer, 'dark');
+        statsChart = echarts.init(dom.charts.statsPie, 'dark');
+        
+        Object.values(dom.buttons).forEach(btn => { if (btn) btn.addEventListener('click', (e) => {
+            switch(e.target.id) {
+                case 'start-first-session': startFirstSession(); break;
+                case 'start-new-session': startNewSession(); break;
+                case 'btn-blackjack': handleHand('blackjack'); break;
+                case 'btn-win': handleHand('win'); break;
+                case 'btn-lose': handleHand('lose'); break;
+                case 'btn-push': handleHand('push'); break;
+                case 'end-session-manually': endSession(true); break;
+                case 'reset-app-btn': resetApplication(); break;
+                case 'show-strategy-btn': dom.modal.div.style.display = 'flex'; break;
+                case 'add-funds-btn': addFunds(); break;
+            }
+        })});
+        
+        dom.modal.close.addEventListener('click', () => { dom.modal.div.style.display = 'none'; });
+        window.addEventListener('click', (event) => { if (event.target == dom.modal.div) { dom.modal.div.style.display = 'none'; } });
+        loadData();
+    });
+</script>
+</body>
+</html>

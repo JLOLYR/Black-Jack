@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asistente Inteligente para Ruleta</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <style>
+        :root {
+            --bg-color: #1a1a1a;
+            --surface-color: #2c2c2c;
+            --primary-color: #c62828;
+            --text-color: #e0e0e0;
+            --win-color: #4CAF50;
+            --loss-color: #f44336;
+            --suggestion-color: #ffc107;
+            --ideal-color: #03a9f4;
+        }
+        body { font-family: 'Roboto', sans-serif; background-color: var(--bg-color); color: var(--text-color); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; gap: 20px; }
+        .main-container { display: flex; flex-wrap: wrap; gap: 20px; width: 100%; max-width: 1300px; }
+        .column { display: flex; flex-direction: column; gap: 20px; }
+        .left-column { flex: 1; min-width: 400px; }
+        .right-column { flex: 2; min-width: 500px; }
+        .panel { background-color: var(--surface-color); padding: 25px; border-radius: 12px; box-shadow: 0 5px 20px rgba(0, 0, 0, 0.4); }
+        h2 { color: var(--primary-color); text-align: center; margin-top: 0; }
+        label { display: block; margin-top: 15px; font-size: 1em; font-weight: 500; color: #b0b0b0; }
+        input[type="number"] { width: 100%; padding: 12px; margin-top: 8px; border-radius: 8px; border: 1px solid #444; background-color: #333; color: #fff; box-sizing: border-box; font-size: 1.1em; }
+        button { width: 100%; padding: 15px; margin-top: 25px; border: none; border-radius: 8px; background-color: var(--primary-color); color: white; font-size: 1.2em; font-weight: bold; cursor: pointer; transition: all 0.3s ease; }
+        button:hover { filter: brightness(1.2); }
+        button:disabled { background-color: #555; color: #888; cursor: not-allowed; }
+        .hidden { display: none; }
+        .chart-container { width: 100%; height: 400px; }
+        
+        .title-container { display: flex; justify-content: center; align-items: center; gap: 15px; margin-bottom: 20px;}
+        .icon-btn { background-color: transparent; border: 1px solid var(--primary-color); color: var(--primary-color); padding: 5px 10px; font-size: 1.5em; margin: 0; min-width: 50px; width: auto; line-height: 1; }
+        #reset-app-btn { border-color: var(--loss-color); color: var(--loss-color); }
+
+        #dashboard-stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; text-align: center; }
+        .stat h3 { margin: 0 0 5px 0; color: var(--primary-color); font-size: 1em; text-transform: uppercase; }
+        .stat p { margin: 0; font-size: 1.8em; font-weight: bold; }
+
+        #number-input-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; }
+        .number-button { padding: 10px 5px; font-size: 1.2em; font-weight: bold; border-radius: 50%; border: 2px solid #555; background-color: #333; color: white; cursor: pointer; transition: all 0.2s ease; margin:0; }
+        .number-button:hover { transform: scale(1.1); }
+        .number-button.red { border-color: var(--loss-color); }
+        .number-button.black { border-color: #fff; }
+        .number-button.green { border-color: var(--win-color); }
+        
+        #suggestion-box {
+            background-color: rgba(255, 193, 7, 0.1);
+            border: 2px solid var(--suggestion-color);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        #suggestion-text { font-size: 1.5em; font-weight: bold; color: var(--suggestion-color); }
+        #suggestion-reason { font-size: 0.9em; color: #ccc; margin-top: 5px; }
+        
+        #history-panel { max-height: 300px; overflow-y: auto; }
+        #history-log { list-style: none; padding: 0; margin: 0; }
+        #history-log li { padding: 5px; border-bottom: 1px solid #444; display: flex; justify-content: space-between; align-items: center;}
+        .history-number { font-size: 1.2em; font-weight: bold; }
+        .history-outcome { font-size: 0.9em; }
+
+    </style>
+</head>
+<body>
+
+    <div class="panel" style="width: 100%; max-width: 1260px; box-sizing: border-box;">
+        <div class="title-container">
+            <h2>Asistente Inteligente de Ruleta</h2>
+            <button class="icon-btn" id="reset-app-btn" title="Reiniciar Aplicación">🔄</button>
+        </div>
+        <div id="dashboard-stats">
+            <div class="stat"><h3>Capital Inicial</h3><p id="genesis-capital">$0</p></div>
+            <div class="stat"><h3>Capital Actual</h3><p id="current-capital">$0</p></div>
+            <div class="stat"><h3>Ganancia/Pérdida Neta</h3><p id="net-profit">$0</p></div>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <div class="column left-column">
+            <div class="panel">
+                <h2 id="panel-title">Control de Sesión</h2>
+                <div id="setup"><label for="initial-investment">Ingresa tu Capital Inicial:</label><input type="number" id="initial-investment" placeholder="Ej: 50000"><button id="start-first-session">¡Comenzar Aventura!</button></div>
+                
+                <div id="session-tracker" class="hidden">
+                    <p>Apuesta por giro: <strong id="bet-amount-display" style="color:var(--primary-color)"></strong></p>
+                    <div id="suggestion-box">
+                        <div id="suggestion-text">Calculando sugerencia...</div>
+                        <div id="suggestion-reason"></div>
+                    </div>
+                    <p>Haz clic en el número que salió en la ruleta:</p>
+                    <div id="number-input-grid"></div>
+                </div>
+            </div>
+            <div class="panel" id="history-panel">
+                <h2>Historial de Giros</h2>
+                <ul id="history-log"></ul>
+            </div>
+        </div>
+        <div class="column right-column">
+            <div class="panel"><div class="chart-container" id="projection-chart-container"></div></div>
+        </div>
+    </div>
+
+<script>
+    // --- CONSTANTES Y CONFIGURACIÓN ---
+    const DATA_KEY = 'rouletteAssistantData';
+    const COLORS = { win: '#4CAF50', loss: '#f44336', ideal: '#03a9f4', suggestion: '#ffc107' };
+    const ROULETTE_NUMBERS = {};
+    const BET_TYPES = {
+        red: { name: 'Rojo', check: num => ROULETTE_NUMBERS[num].color === 'red' },
+        black: { name: 'Negro', check: num => ROULETTE_NUMBERS[num].color === 'black' },
+        even: { name: 'Par', check: num => num !== 0 && num % 2 === 0 },
+        odd: { name: 'Impar', check: num => num !== 0 && num % 2 !== 0 },
+        low: { name: '1-18', check: num => num >= 1 && num <= 18 },
+        high: { name: '19-36', check: num => num >= 19 && num <= 36 }
+    };
+    [...Array(37).keys()].forEach(n => {
+        if (n === 0) ROULETTE_NUMBERS[n] = { color: 'green' };
+        else if ([1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36].includes(n)) ROULETTE_NUMBERS[n] = { color: 'red' };
+        else ROULETTE_NUMBERS[n] = { color: 'black' };
+    });
+    const clpFormatter = new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', minimumFractionDigits: 0, maximumFractionDigits: 0 });
+
+    // --- ESTADO DE LA APLICACIÓN ---
+    let appData = { genesis: 0, currentCapital: 0, betAmount: 0, stats: { red: 0, black: 0, even: 0, odd: 0, low: 0, high: 0 }, history: [] };
+    let currentSuggestion = null;
+
+    // --- REFERENCIAS AL DOM ---
+    const dom = {
+        dashboard: { genesis: document.getElementById('genesis-capital'), current: document.getElementById('current-capital'), net: document.getElementById('net-profit') },
+        setup: document.getElementById('setup'),
+        session: { div: document.getElementById('session-tracker'), betAmount: document.getElementById('bet-amount-display') },
+        suggestion: { text: document.getElementById('suggestion-text'), reason: document.getElementById('suggestion-reason') },
+        initialInput: document.getElementById('initial-investment'),
+        buttons: { startFirst: document.getElementById('start-first-session'), reset: document.getElementById('reset-app-btn') },
+        numberGrid: document.getElementById('number-input-grid'),
+        historyLog: document.getElementById('history-log'),
+        charts: { projectionPanel: document.getElementById('projection-chart-container') }
+    };
+    let projectionChart;
+
+    // --- LÓGICA PRINCIPAL ---
+    function saveData() { localStorage.setItem(DATA_KEY, JSON.stringify(appData)); }
+    function loadData() {
+        const storedData = localStorage.getItem(DATA_KEY);
+        if (storedData) {
+            appData = JSON.parse(storedData);
+            if (!appData.stats) appData.stats = { red: 0, black: 0, even: 0, odd: 0, low: 0, high: 0 };
+            dom.setup.classList.add('hidden');
+            dom.session.div.classList.remove('hidden');
+        } else {
+            dom.setup.classList.remove('hidden');
+            dom.session.div.classList.add('hidden');
+        }
+        updateAllUI();
+    }
+
+    function startFirstSession() {
+        const amount = parseFloat(dom.initialInput.value);
+        if (isNaN(amount) || amount <= 0) { alert('Monto inicial inválido.'); return; }
+        appData.genesis = amount;
+        appData.currentCapital = amount;
+        appData.history.push({ type: 'start', balance: amount });
+        saveData();
+        loadData();
+    }
+    
+    function registerSpin(number) {
+        // 1. Determinar el resultado basado en la sugerencia ACTUAL
+        const win = BET_TYPES[currentSuggestion].check(number);
+        const profit = win ? appData.betAmount : -appData.betAmount;
+        appData.currentCapital += profit;
+
+        // 2. Actualizar estadísticas de apuestas externas
+        Object.keys(BET_TYPES).forEach(key => { if (BET_TYPES[key].check(number)) appData.stats[key]++; });
+        
+        // 3. Registrar en el historial
+        appData.history.push({ number, profit, balance: appData.currentCapital });
+        
+        // 4. Guardar y actualizar todo
+        saveData();
+        updateAllUI();
+    }
+
+    function calculateSuggestion() {
+        const s = appData.stats;
+        const deviations = {
+            red: s.black - s.red,
+            black: s.red - s.black,
+            even: s.odd - s.even,
+            odd: s.even - s.odd,
+            low: s.high - s.low,
+            high: s.low - s.high,
+        };
+
+        let maxDeviation = -Infinity;
+        let suggestionKey = 'red'; // Default
+        for (const key in deviations) {
+            if (deviations[key] > maxDeviation) {
+                maxDeviation = deviations[key];
+                suggestionKey = key;
+            }
+        }
+        currentSuggestion = suggestionKey;
+        
+        let reason = '';
+        if (['red', 'black'].includes(suggestionKey)) reason = `Rojos: ${s.red}, Negros: ${s.black}`;
+        else if (['even', 'odd'].includes(suggestionKey)) reason = `Pares: ${s.even}, Impares: ${s.odd}`;
+        else reason = `Bajos (1-18): ${s.low}, Altos (19-36): ${s.high}`;
+        
+        dom.suggestion.text.textContent = `Sugerencia: Apostar a ${BET_TYPES[suggestionKey].name}`;
+        dom.suggestion.reason.textContent = `${reason} (Déficit de ${maxDeviation})`;
+    }
+
+    // --- LÓGICA DE UI ---
+    function updateAllUI() {
+        appData.betAmount = Math.max(1000, Math.floor((appData.currentCapital * 0.02) / 1000) * 1000);
+        dom.session.betAmount.textContent = clpFormatter.format(appData.betAmount);
+        
+        const netProfit = appData.currentCapital - appData.genesis;
+        dom.dashboard.genesis.textContent = clpFormatter.format(appData.genesis);
+        dom.dashboard.current.textContent = clpFormatter.format(appData.currentCapital);
+        dom.dashboard.net.textContent = clpFormatter.format(netProfit);
+        dom.dashboard.net.style.color = netProfit >= 0 ? COLORS.win : COLORS.loss;
+        
+        calculateSuggestion();
+        updateHistoryLog();
+        updateProjectionChart();
+    }
+    
+    function createNumberGrid() {
+        dom.numberGrid.innerHTML = '';
+        for (let i = 0; i <= 36; i++) {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.textContent = i;
+            btn.className = `number-button ${ROULETTE_NUMBERS[i].color}`;
+            btn.dataset.number = i;
+            dom.numberGrid.appendChild(btn);
+        }
+    }
+
+    function updateHistoryLog() {
+        dom.historyLog.innerHTML = '';
+        [...appData.history].reverse().slice(0, 10).forEach(item => {
+            if (item.type === 'start') return;
+            const li = document.createElement('li');
+            const numSpan = document.createElement('span');
+            numSpan.className = 'history-number';
+            numSpan.textContent = item.number;
+            numSpan.style.color = ROULETTE_NUMBERS[item.number].color === 'red' ? COLORS.loss : (ROULETTE_NUMBERS[item.number].color === 'black' ? '#fff' : COLORS.win);
+            
+            const outcomeSpan = document.createElement('span');
+            outcomeSpan.className = 'history-outcome';
+            outcomeSpan.textContent = item.profit >= 0 ? `+${clpFormatter.format(item.profit)}` : clpFormatter.format(item.profit);
+            outcomeSpan.style.color = item.profit >= 0 ? COLORS.win : COLORS.loss;
+            
+            li.appendChild(numSpan);
+            li.appendChild(outcomeSpan);
+            dom.historyLog.appendChild(li);
+        });
+    }
+
+    function updateProjectionChart() {
+        if (appData.genesis === 0) { if(projectionChart) projectionChart.clear(); return; }
+        const categories = ['Inicio', ...appData.history.filter(h => h.type !== 'start').map((_, i) => `G${i + 1}`)];
+        const realData = appData.history.map(h => h.balance);
+
+        projectionChart.setOption({
+            backgroundColor: 'transparent',
+            title: { text: 'Progreso del Capital', textStyle: { color: '#e0e0e0' } },
+            tooltip: { trigger: 'axis' },
+            grid: { left: '3%', right: '4%', bottom: '15%', containLabel: true },
+            xAxis: { type: 'category', boundaryGap: false, data: categories },
+            yAxis: { type: 'value', axisLabel: { formatter: (value) => clpFormatter.format(value) } },
+            dataZoom: [ { type: 'slider', start: 0, end: 100, bottom: 10 }, { type: 'inside' } ],
+            series: [
+                { name: 'Balance Real', type: 'line', smooth: true, data: realData, itemStyle: { color: COLORS.win }, lineStyle: { width: 3 } }
+            ]
+        }, true);
+    }
+    
+    // --- INICIALIZACIÓN ---
+    document.addEventListener('DOMContentLoaded', () => {
+        projectionChart = echarts.init(dom.charts.projectionPanel, 'dark');
+        createNumberGrid();
+
+        dom.buttons.startFirst.addEventListener('click', startFirstSession);
+        dom.buttons.reset.addEventListener('click', () => { if (confirm('¿Reiniciar toda la aventura?')) { localStorage.removeItem(DATA_KEY); location.reload(); } });
+        dom.numberGrid.addEventListener('click', (e) => {
+            if (e.target.matches('.number-button')) {
+                registerSpin(parseInt(e.target.dataset.number));
+            }
+        });
+
+        loadData();
+    });
+</script>
+</body>
+</html>
