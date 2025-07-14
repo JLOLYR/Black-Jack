@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- PWA Tags -->
+    <meta name="theme-color" content="#1a1a1a">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icons/icon-192x192.png">
+
+    <title>Blackjack Dashboard Pro</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <style>
+        :root {
+            --bg-color: #1a1a1a;
+            --surface-color: #2c2c2c;
+            --primary-color: #53b040;
+            --text-color: #e0e0e0;
+            --win-color: #1da821;
+            --loss-color: #f44336;
+            --blackjack-color: #ffc107;
+            --push-color: #757575;
+            --observe-color: #03a9f4;
+            --suggested-bet-color: #29b6f6;
+            --ideal-color: #03a9f4;
+            --realistic-color: var(--blackjack-color);
+        }
+        body { font-family: 'Roboto', sans-serif; background-color: var(--bg-color); color: var(--text-color); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; gap: 20px; }
+        .main-container { display: flex; flex-wrap: wrap; gap: 20px; width: 100%; max-width: 1400px; justify-content: center; }
+        .column { display: flex; flex-direction: column; gap: 20px; width: 100%;}
+        .left-column { flex: 1.5; min-width: 380px; max-width: 450px; }
+        .right-column { flex: 2; min-width: 500px; }
+        .panel { background-color: var(--surface-color); padding: 25px; border-radius: 12px; box-shadow: 0 5px 20px rgba(0, 0, 0, 0.4); }
+        h2 { color: var(--primary-color); text-align: center; margin-top: 0; }
+        h3 { color: var(--primary-color); margin-top: 25px; border-bottom: 1px solid #444; padding-bottom: 5px; }
+        label { display: block; margin-top: 15px; font-size: 1em; font-weight: 500; color: #b0b0b0; }
+        input[type="number"] { width: 100%; padding: 12px; margin-top: 8px; border-radius: 8px; border: 1px solid #444; background-color: #333; color: #fff; box-sizing: border-box; font-size: 1.1em; }
+        button { width: 100%; padding: 15px; margin-top: 10px; border: none; border-radius: 8px; font-size: 1.2em; font-weight: bold; cursor: pointer; transition: all 0.3s ease; }
+        button:hover { transform: translateY(-2px); }
+        button:disabled { background-color: #555 !important; color: #888 !important; cursor: not-allowed; transform: none; }
+        .hidden { display: none; }
+        .chart-container { width: 100%; height: 350px; }
+        .pie-chart-container { width: 100%; height: 250px; }
+        #session-chart-container { width: 100%; height: 250px; margin-top: 20px;}
+        
+        .title-container { display: flex; justify-content: center; align-items: center; gap: 15px; margin-bottom: 20px;}
+        .icon-btn { background-color: transparent; border: 1px solid var(--primary-color); color: var(--primary-color); padding: 5px 10px; font-size: 1.5em; margin: 0; min-width: 50px; width: auto; line-height: 1; }
+        #reset-app-btn { border-color: var(--loss-color); color: var(--loss-color); }
+        .small-icon-btn { background-color: transparent; border: 1px solid var(--observe-color); color: var(--observe-color); padding: 2px 8px; font-size: 1.2em; margin-left: 15px; width: auto; line-height: 1; vertical-align: middle;}
+        
+        #global-stats, #analytical-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; text-align: center; }
+        #global-stats { border-bottom: 2px solid #444; padding-bottom: 15px; margin-bottom: 15px; }
+        .stat h3 { margin: 0 0 5px 0; color: var(--primary-color); font-size: 1em; text-transform: uppercase; }
+        .stat p { margin: 0; font-size: 1.8em; font-weight: bold; }
+
+        .tabs { display: flex; border-bottom: 2px solid #444; margin-bottom: 20px; }
+        .tab-button { flex: 1; padding: 10px; background: none; border: none; color: #888; font-size: 1.1em; cursor: pointer; margin: 0; border-radius: 8px 8px 0 0; }
+        .tab-button.active { background-color: #444; color: white; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .info-item p { margin: 0; font-size: 0.9em; color: #ccc; }
+        .info-item span { font-size: 1.5em; font-weight: bold; color: white; }
+        #suggested-bet-item span { color: var(--suggested-bet-color); }
+        #decision-box { padding: 15px; text-align: center; font-size: 1.5em; font-weight: bold; border-radius: 8px; margin-top: 15px; }
+        .decision-good { background-color: var(--win-color); color: white; }
+        .decision-bad { background-color: var(--loss-color); color: white; }
+        .card-input-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-top: 15px; }
+        .card-button { padding: 10px 5px; font-size: 1.2em; font-weight: bold; border-radius: 8px; border: 2px solid #555; background-color: #333; color: white; cursor: pointer; margin:0; }
+        .register-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px;}
+        #end-hand-btn-bet { background-color: var(--blackjack-color); color:black; }
+        #end-hand-btn-observe { background-color: var(--observe-color); color:white; }
+        #delete-last-card-btn { background-color: var(--loss-color); margin-left: 10px; padding: 5px 10px; width:auto; font-size: 1em; vertical-align: middle;}
+        #result-buttons-panel { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
+        #btn-win, #btn-lose, #btn-blackjack, #btn-push { color: white; }
+        #btn-win { background-color: var(--win-color); }
+        #btn-lose { background-color: var(--loss-color); }
+        #btn-blackjack { background-color: var(--blackjack-color); color: black; }
+        #btn-push { background-color: var(--push-color); }
+        
+        #add-funds-container { border-top: 2px dashed #444; margin-top: 20px; padding-top: 15px; }
+        #add-funds-btn { font-size: 0.9em; padding: 10px; background-color: var(--win-color); }
+        #start-first-session, #start-new-session { background-color: var(--win-color); margin-top: 25px; }
+        #end-session-manually { background-color: #ff9800; color:black; margin-top: 15px; }
+        #lockout-message { text-align: center; padding: 20px; background-color: rgba(244, 67, 54, 0.2); border: 1px solid var(--loss-color); border-radius: 8px;}
+
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.85); justify-content: center; align-items: center; }
+        .modal-content-wrapper { background-color: var(--surface-color); padding: 30px; border-radius: 12px; max-width: 90%; width: 800px; max-height: 80vh; overflow-y: auto; position: relative; }
+        .modal-content-wrapper p { line-height: 1.6; color: var(--text-color); }
+        .modal-content-wrapper code { background-color: var(--bg-color); padding: 2px 6px; border-radius: 4px; font-family: monospace; }
+        .modal-content-wrapper strong { color: var(--primary-color); }
+        .modal-close { position: absolute; top: 15px; right: 25px; color: #f1f1f1; font-size: 40px; font-weight: bold; cursor: pointer; }
+        #info-button { position: fixed; bottom: 20px; right: 20px; width: 60px; height: 60px; background-color: var(--primary-color); color: white; border-radius: 50%; border: none; font-size: 2em; line-height: 60px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.4); cursor: pointer; z-index: 999; }
+        
+        @media (max-width: 1000px) {
+            .main-container { flex-direction: column; }
+            .left-column, .right-column { max-width: 100%; }
+        }
+        @media (max-width: 600px) {
+            #global-stats, #analytical-stats { grid-template-columns: 1fr 1fr; }
+            #global-stats > .stat:last-child { grid-column: 1 / -1; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="panel" style="width: 100%; max-width: 1360px; box-sizing: border-box;">
+        <div class="title-container">
+            <button class="icon-btn" id="show-strategy-btn" title="Mostrar Tabla de Estrategia">🂡</button>
+            <h2>Blackjack Dashboard Pro</h2>
+            <button class="icon-btn" id="reset-app-btn" title="Reiniciar Aplicación Completa">🔄</button>
+        </div>
+        <div id="global-stats">
+            <div class="stat"><h3>Capital Génesis</h3><p id="genesis-capital">$0</p></div>
+            <div class="stat"><h3>Capital Actual</h3><p id="current-capital">$0</p></div>
+            <div class="stat"><h3>Ganancia Neta</h3><p id="net-profit">$0</p></div>
+        </div>
+        <div id="analytical-stats">
+            <div class="stat"><h3>Manos Totales</h3><p id="hands-played">0</p></div>
+            <div class="stat"><h3>Conteo Verdadero</h3><p id="true-count-display">0.00</p></div>
+            <div class="stat"><h3>Prob. Éxito Próxima</h3><p id="success-prob-display">50.7%</p></div>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <div class="column left-column">
+            <div class="panel">
+                <div class="tabs">
+                    <button class="tab-button active" data-tab="capital-control">Gestión de Capital</button>
+                    <button class="tab-button" data-tab="card-counting">Análisis y Conteo</button>
+                </div>
+
+                <div id="capital-control" class="tab-content active">
+                    <div id="setup-panel">
+                        <label for="initial-investment">Ingresa tu Capital Inicial:</label>
+                        <input type="number" id="initial-investment" placeholder="Ej: 50000">
+                        <button id="start-first-session">¡Comenzar Aventura!</button>
+                    </div>
+                    <div id="next-session-panel" class="hidden">
+                        <h2>Nueva Sesión de Juego</h2>
+                         <div id="lockout-message" class="hidden"></div>
+                        <div id="session-form">
+                            <p>Capital para esta sesión: <strong id="next-session-capital" style="color: var(--primary-color);"></strong>.</p>
+                            <label for="bet-percentage">Porcentaje de apuesta unidad (%):</label><input type="number" id="bet-percentage" value="1.5" step="0.1">
+                            <label for="stop-win-units">Meta Ganancia (Unidades):</label><input type="number" id="stop-win-units" value="5">
+                            <label for="stop-loss-units">Límite Pérdida (Unidades):</label><input type="number" id="stop-loss-units" value="7">
+                            <button id="start-new-session">Iniciar Sesión de Apuestas</button>
+                        </div>
+                        <div id="add-funds-container">
+                            <label for="add-funds-input">¿Añadir fondos?</label>
+                            <input type="number" id="add-funds-input" placeholder="Monto">
+                            <button id="add-funds-btn">Depositar</button>
+                        </div>
+                    </div>
+                    <div id="session-tracker-panel" class="hidden">
+                        <h2>Sesión en Curso</h2>
+                        <div class="info-grid">
+                            <div class="info-item"><p>Capital Sesión</p><span id="session-initial-balance"></span></div>
+                            <div class="info-item"><p>Saldo Actual</p><span id="session-current-balance"></span></div>
+                            <div class="info-item"><p>Apuesta Unidad</p><span id="session-bet-unit"></span></div>
+                            <div class="info-item" id="suggested-bet-item"><p>Apuesta Sugerida</p><span id="session-suggested-bet"></span></div>
+                            <div class="info-item" style="color: var(--win-color);"><p>Meta (Stop-Win)</p><span id="session-win-target"></span></div>
+                            <div class="info-item" style="color: var(--loss-color);"><p>Límite (Stop-Loss)</p><span id="session-loss-target"></span></div>
+                        </div>
+                        <div id="session-chart-container"></div>
+                        <button id="end-session-manually">Terminar Sesión Manualmente</button>
+                    </div>
+                </div>
+
+                <div id="card-counting" class="tab-content">
+                    <div id="hand-panel">
+                        <div id="register-panel">
+                            <h2>Registro de Cartas <button id="reset-shoe-btn" class="small-icon-btn" title="Reiniciar Conteo (Nuevo Zapato)">🔀</button></h2>
+                            <p>Cartas vistas en la mano:<button id="delete-last-card-btn" title="Borrar última carta">⏪</button></p>
+                            <p><strong id="current-hand-cards" style="color: var(--blackjack-color); font-size: 1.2em;"></strong></p>
+                            <div class="card-input-grid"></div>
+                            <div class="register-actions">
+                                <button id="end-hand-btn-observe">👁️ Observar sin Apostar</button>
+                                <button id="end-hand-btn-bet">💰 Finalizar y Apostar</button>
+                            </div>
+                        </div>
+                        <div id="result-panel" class="hidden">
+                            <h2>¿Cuál fue el resultado?</h2>
+                            <div>
+                                <label for="actual-bet-input">Monto Apostado Real:</label>
+                                <input type="number" id="actual-bet-input">
+                            </div>
+                            <div id="result-buttons-panel">
+                                <button id="btn-win">🏆 Ganar</button>
+                                <button id="btn-lose">💀 Perder</button>
+                                <button id="btn-blackjack">🂡 Blackjack</button>
+                                <button id="btn-push">🤝 Empate</button>
+                            </div>
+                        </div>
+                    </div>
+                     <div id="decision-box" style="margin-top:20px;">Inicie una sesión de juego para comenzar.</div>
+                </div>
+            </div>
+             <div class="panel">
+                <h2>Resultados de Manos Apostadas</h2>
+                <div class="pie-chart-container" id="bet-stats-pie-chart"></div>
+            </div>
+             <div class="panel">
+                <h2>Resultados de Todas las Manos</h2>
+                <div class="pie-chart-container" id="all-stats-pie-chart"></div>
+            </div>
+        </div>
+        <div class="column right-column">
+            <div class="panel">
+                <h2>Análisis de Evolución (Ventaja vs. Realidad)</h2>
+                <div class="chart-container" id="analytical-chart-container"></div>
+            </div>
+            <div class="panel">
+                <h2>Progreso y Proyección del Capital</h2>
+                <div class="chart-container" id="capital-chart-container"></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modals -->
+    <div id="strategy-modal" class="modal"><span class="modal-close" id="close-strategy-modal">×</span><img class="modal-content-wrapper" src="https://i.imgur.com/G5n9p0C.jpeg" alt="Tabla de Estrategia de Blackjack"></div>
+    <button id="info-button" title="Ayuda e Información">ℹ️</button>
+    <div id="info-modal" class="modal">
+        <div class="modal-content-wrapper">
+            <span class="modal-close" id="close-info-modal">×</span>
+            <h2>Guía de Uso del Dashboard Pro</h2>
+            <h3>1. Gestión de Capital y Sesiones</h3>
+            <p>Esta sección es el núcleo de tu disciplina financiera. El objetivo es proteger tu capital y jugar de forma estructurada.</p>
+            <ul>
+                <li><strong>Capital Génesis:</strong> Es el dinero total con el que inicias tu "carrera" de Blackjack.</li>
+                <li><strong>Iniciar Sesión de Apuestas:</strong> Antes de apostar, debes iniciar una sesión. Aquí defines tu <strong>Apuesta Unidad</strong> (un % pequeño de tu capital total) y tus límites de <strong>Stop-Win</strong> (meta de ganancia) y <strong>Stop-Loss</strong> (límite de pérdida).</li>
+                <li><strong>Límite de Sesiones:</strong> Para evitar la fatiga y el juego impulsivo, solo puedes iniciar <strong>3 sesiones de apuestas cada 12 horas</strong>.</li>
+            </ul>
+            <h3>2. Análisis y Conteo (Omega II)</h3>
+            <p>Aquí es donde aplicas la estrategia. El sistema de conteo Omega II te ayuda a saber cuándo la baraja es favorable.</p>
+            <ul>
+                <li><strong>Conteo Verdadero (TC):</strong> Es el indicador más importante. Un <code>TC positivo</code> significa que hay más cartas altas, lo cual es bueno para ti. Un <code>TC negativo</code> es bueno para la casa.</li>
+                <li><strong>Prob. Éxito Próxima:</strong> Combina la probabilidad base de ganar en Blackjack (aprox. 50.7%) con la ventaja que te da el TC. Te da una expectativa matemática para la siguiente mano.</li>
+                <li><strong>Registro de Manos:</strong>
+                    <ul>
+                        <li><button disabled style="background-color: var(--observe-color); color: white; padding: 5px; font-size: 0.8em; width: auto; margin:0;">👁️ Observar</button>: Usa este botón cuando el TC es bajo. Registras las cartas para mantener el conteo, pero sin arriesgar dinero.</li>
+                        <li><button disabled style="background-color: var(--blackjack-color); color: black; padding: 5px; font-size: 0.8em; width: auto; margin:0;">💰 Apostar</button>: Este botón se activa solo cuando el TC es favorable (>= 1.5). Al usarlo, se apuesta una cantidad variable (tu Apuesta Unidad multiplicada por el TC) para maximizar ganancias.</li>
+                    </ul>
+                </li>
+                 <li><strong>Reiniciar Conteo (🔀):</strong> Usa este botón cuando el crupier baraja las cartas o cambia el zapato. Esto reinicia todo el análisis del zapato actual, pero <strong>no afecta tu capital ni tu sesión</strong>.</li>
+                 <li><strong>Borrar Carta (⏪):</strong> Si te equivocas al hacer clic en una carta, usa este botón para eliminar la última que agregaste.</li>
+            </ul>
+            <h3>3. Interpretación de Gráficos</h3>
+            <ul>
+                <li><strong>Análisis de Evolución:</strong> Compara la <strong>predicción</strong> (líneas de TC y Ventaja) con la <strong>realidad</strong> (barras de resultados). A largo plazo, deberías ver que ganas más (barras verdes) cuando las líneas están altas.</li>
+                <li><strong>Progreso del Capital:</strong> Muestra tu crecimiento real y lo compara con dos escenarios: uno <strong>Realista</strong> (ganar 2 unidades por sesión) y uno <strong>Ideal</strong> (un 10% de interés compuesto por sesión).</li>
+            </ul>
+        </div>
+    </div>
+
+<script>
+    // --- CÓDIGO JAVASCRIPT FINAL (SIN CAMBIOS) ---
+    // (El código JS de la respuesta anterior ya es compatible y está completo)
+    const DATA_KEY = 'blackjackDashboardProV7';
+    const COLORS = { win: '#1da821', loss: '#f44336', blackjack: '#ffc107', push: '#757575', observe: '#03a9f4', suggestedBet: '#29b6f6', ideal: '#03a9f4', realistic: '#ffc107' };
+    const CARD_MAP = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
+    const OMEGA_II_VALUES = { '2': 1, '3': 1, '7': 1, '4': 2, '5': 2, '6': 2, '8': 0, 'A': 0, '9': -1, '10': -2, 'J': -2, 'Q': -2, 'K': -2 };
+    const BASE_SUCCESS_PROBABILITY = 0.507;
+    const MAX_SESSIONS = 3;
+    const SESSION_WINDOW_HOURS = 12;
+    const clpFormatter = new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', minimumFractionDigits: 0, maximumFractionDigits: 0 });
+
+    let appData = { 
+        genesis: 0, 
+        log: [], 
+        sessionControl: { count: 0, startTime: 0 },
+        countData: { numDecks: 6, runningCount: 0, cardsSeen: 0, cardDistribution: {}, history: [] }
+    };
+    let sessionData = { initial: 0, current: 0, unitBet: 0, winTarget: 0, lossTarget: 0, isActive: false };
+    let currentHand = [];
+    let dom = {};
+    let capitalChart, analyticalChart, betStatsPieChart, allStatsPieChart, sessionGaugeChart;
+    
+    // --- LÓGICA DE DATOS Y ESTADO ---
+    function saveData() { localStorage.setItem(DATA_KEY, JSON.stringify(appData)); }
+    function loadData() {
+        const storedData = localStorage.getItem(DATA_KEY);
+        if (storedData) {
+            appData = JSON.parse(storedData);
+            if (!appData.countData) appData.countData = { numDecks: 6, runningCount: 0, cardsSeen: 0, cardDistribution: {}, history: [] };
+            if (!appData.sessionControl) appData.sessionControl = { count: 0, startTime: 0 };
+            dom.panels.setup.classList.add('hidden');
+            dom.panels.nextSession.classList.remove('hidden');
+        } else {
+            CARD_MAP.forEach(card => { if(!appData.countData.cardDistribution) appData.countData.cardDistribution = {}; appData.countData.cardDistribution[card] = 0; });
+            dom.panels.setup.classList.remove('hidden');
+            dom.panels.nextSession.classList.add('hidden');
+        }
+        updateAllUI();
+        checkSessionLock(); 
+    }
+    
+    function resetApplication() {
+        if (confirm('¿Estás SEGURO? Se borrará TODO tu progreso, capital y conteo.')) {
+            if (confirm('Última advertencia. Esta acción es IRREVERSIBLE. ¿Borrar todo?')) {
+                localStorage.removeItem(DATA_KEY);
+                location.reload();
+            }
+        }
+    }
+    
+    function resetShoe() {
+        if (confirm('¿Reiniciar el conteo para un nuevo zapato? Se perderá el historial de manos y la distribución de cartas de este zapato.')) {
+            appData.countData.runningCount = 0;
+            appData.countData.cardsSeen = 0;
+            appData.countData.history = [];
+            appData.countData.cardDistribution = {};
+            CARD_MAP.forEach(card => { appData.countData.cardDistribution[card] = 0; });
+            saveData();
+            updateAllUI();
+        }
+    }
+
+    // --- LÓGICA DE CAPITAL Y SESIONES ---
+    function getCurrentCapital() { return appData.log.length > 0 ? appData.log[appData.log.length - 1].final : appData.genesis; }
+    function calculateBetUnit(capital, percentage) { return Math.max(1000, Math.floor((capital * (percentage / 100)) / 1000) * 1000); }
+
+    function startFirstSession() {
+        const genesisAmount = parseFloat(dom.inputs.initialInvestment.value);
+        if (isNaN(genesisAmount) || genesisAmount <= 0) { alert('Monto inicial inválido.'); return; }
+        appData.genesis = genesisAmount;
+        saveData();
+        loadData();
+    }
+
+    function addFunds() {
+        const fundsToAdd = parseFloat(dom.inputs.addFunds.value);
+        if (isNaN(fundsToAdd) || fundsToAdd <= 0) { alert("Monto inválido."); return; }
+        const lastBalance = getCurrentCapital();
+        appData.log.push({ type: 'deposit', amount: fundsToAdd, initial: lastBalance, final: lastBalance + fundsToAdd });
+        saveData(); dom.inputs.addFunds.value = ''; loadData();
+    }
+    
+    function startNewSession() {
+        if(checkSessionLock()) return;
+        if (appData.sessionControl.startTime === 0 || !appData.sessionControl.startTime) appData.sessionControl.startTime = Date.now();
+        
+        const lastBalance = getCurrentCapital();
+        const percentage = parseFloat(dom.inputs.betPercentage.value) || 1.5;
+        const unitBet = calculateBetUnit(lastBalance, percentage);
+        const winUnits = parseInt(dom.inputs.stopWinUnits.value) || 5;
+        const lossUnits = parseInt(dom.inputs.stopLossUnits.value) || 7;
+        
+        sessionData = { 
+            initial: lastBalance, current: lastBalance, unitBet: unitBet,
+            winTarget: lastBalance + (winUnits * unitBet), 
+            lossTarget: lastBalance - (lossUnits * unitBet), isActive: true
+        };
+        dom.panels.nextSession.classList.add('hidden');
+        dom.panels.sessionTracker.classList.remove('hidden');
+        updateAllUI();
+        setTimeout(() => sessionGaugeChart.resize(), 100);
+    }
+    
+    function endSession(manual = false) {
+        if (manual && !confirm("¿Seguro que quieres terminar la sesión de apuestas?")) return;
+        const handsBetThisSession = appData.countData.history.slice(appData.log.reduce((acc, val) => acc + (val.hands || 0), 0)).filter(h => h.betAmount > 0).length;
+        appData.log.push({ initial: sessionData.initial, final: sessionData.current, hands: handsBetThisSession });
+        appData.sessionControl.count++;
+        sessionData.isActive = false;
+        saveData();
+        dom.panels.sessionTracker.classList.add('hidden');
+        loadData();
+    }
+    
+    function checkSessionLock() {
+        const now = Date.now();
+        const startTime = appData.sessionControl.startTime;
+        if (!startTime || startTime === 0) return false;
+
+        const timeDiff = now - startTime;
+        const windowMillis = SESSION_WINDOW_HOURS * 60 * 60 * 1000;
+
+        if (timeDiff > windowMillis) {
+            appData.sessionControl.count = 0;
+            appData.sessionControl.startTime = 0;
+            saveData();
+        }
+
+        if (appData.sessionControl.count >= MAX_SESSIONS) {
+            const remainingTime = windowMillis - timeDiff;
+            const hours = Math.floor(remainingTime / (1000 * 60 * 60));
+            const minutes = Math.floor((remainingTime % (1000 * 60 * 60)) / (1000 * 60));
+            dom.panels.sessionForm.classList.add('hidden');
+            dom.panels.lockout.innerHTML = `Límite de ${MAX_SESSIONS} sesiones alcanzado.<br>Próxima sesión disponible en <strong>${hours}h y ${minutes}m</strong>.`;
+            dom.panels.lockout.classList.remove('hidden');
+            return true;
+        }
+
+        dom.panels.sessionForm.classList.remove('hidden');
+        dom.panels.lockout.classList.add('hidden');
+        return false;
+    }
+
+    // --- LÓGICA DE CONTEO Y JUEGO ---
+    function getTrueCount() {
+        const decksRemaining = ((appData.countData.numDecks * 52) - appData.countData.cardsSeen) / 52;
+        if (decksRemaining < 1) return appData.countData.runningCount / 1;
+        return appData.countData.runningCount / Math.max(1, decksRemaining);
+    }
+
+    function getPlayerAdvantage(trueCount) { return (trueCount - 1) * 0.005; }
+    function getSuccessProbability(advantage) { return BASE_SUCCESS_PROBABILITY + advantage; }
+
+    function registerCard(card) {
+        currentHand.push(card);
+        dom.currentHandCards.textContent = currentHand.join(', ');
+    }
+    
+    function deleteLastCard() {
+        if (currentHand.length > 0) {
+            currentHand.pop();
+            dom.currentHandCards.textContent = currentHand.join(', ');
+        }
+    }
+
+    function processHand(isBetting) {
+        if (currentHand.length === 0) {
+            alert("No has registrado ninguna carta para esta mano.");
+            return;
+        }
+        if (isBetting && !sessionData.isActive) {
+            alert("Debes iniciar una sesión de juego en la pestaña 'Gestión de Capital' para poder apostar.");
+            return;
+        }
+        
+        currentHand.forEach(card => {
+            appData.countData.runningCount += OMEGA_II_VALUES[card];
+            appData.countData.cardsSeen++;
+            if (!appData.countData.cardDistribution[card]) appData.countData.cardDistribution[card] = 0;
+            appData.countData.cardDistribution[card]++;
+        });
+        currentHand = [];
+        
+        if (isBetting) {
+            updateAllUI();
+            const trueCount = getTrueCount();
+            const betMultiplier = Math.max(1, Math.min(10, Math.floor(trueCount)));
+            const suggestedBet = sessionData.unitBet * betMultiplier;
+            dom.inputs.actualBet.value = suggestedBet;
+            
+            dom.panels.register.classList.add('hidden');
+            dom.panels.result.classList.remove('hidden');
+        } else {
+            registerResult('observe');
+        }
+    }
+
+    function registerResult(result) {
+        const trueCount = getTrueCount();
+        const advantage = getPlayerAdvantage(trueCount);
+        const actualBet = result !== 'observe' ? parseFloat(dom.inputs.actualBet.value) : 0;
+        
+        if (result !== 'observe' && (isNaN(actualBet) || actualBet < 0)) {
+            alert("Por favor, ingresa un monto de apuesta válido.");
+            return;
+        }
+        
+        const resultValues = { 'win': 1, 'loss': -1, 'blackjack': 1.5, 'push': 0, 'observe': 0 };
+        if (sessionData.isActive && result !== 'observe') {
+            sessionData.current += (actualBet * resultValues[result]);
+        }
+        
+        appData.countData.history.push({
+            mano: appData.countData.history.length + 1,
+            tc: trueCount,
+            advantage: advantage,
+            result: result,
+            resultValue: resultValues[result],
+            betAmount: actualBet
+        });
+
+        saveData();
+        updateAllUI();
+        
+        if (result !== 'observe') {
+            dom.panels.result.classList.add('hidden');
+            dom.panels.register.classList.remove('hidden');
+            if (sessionData.isActive) {
+                if (sessionData.current >= sessionData.winTarget) { alert(`¡Meta de Ganancia Alcanzada! Sesión terminada.`); endSession(); }
+                else if (sessionData.current <= sessionData.lossTarget) { alert(`Límite de Pérdida Alcanzado. Sesión terminada.`); endSession(); }
+            }
+        }
+    }
+
+    // --- ACTUALIZACIÓN DE UI Y GRÁFICOS ---
+    function updateAllUI() {
+        const capital = getCurrentCapital();
+        const trueCount = getTrueCount();
+        const advantage = getPlayerAdvantage(trueCount);
+        const successProb = getSuccessProbability(advantage);
+        
+        dom.stats.genesis.textContent = clpFormatter.format(appData.genesis);
+        dom.stats.current.textContent = clpFormatter.format(capital);
+        dom.stats.net.textContent = clpFormatter.format(capital - appData.genesis);
+        dom.stats.net.style.color = (capital - appData.genesis) >= 0 ? COLORS.win : COLORS.loss;
+        dom.stats.hands.textContent = appData.countData.history.length;
+        dom.stats.trueCount.textContent = trueCount.toFixed(2);
+        dom.stats.successProb.textContent = `${(successProb * 100).toFixed(2)}%`;
+        dom.stats.successProb.style.color = successProb > BASE_SUCCESS_PROBABILITY ? COLORS.win : COLORS.loss;
+
+        if(appData.genesis > 0) dom.panels.nextSession.querySelector('#next-session-capital').textContent = clpFormatter.format(capital);
+
+        if (sessionData.isActive) {
+            const betMultiplier = Math.max(1, Math.min(10, Math.floor(getTrueCount())));
+            dom.session.initial.textContent = clpFormatter.format(sessionData.initial);
+            dom.session.current.textContent = clpFormatter.format(sessionData.current);
+            dom.session.unitBet.textContent = clpFormatter.format(sessionData.unitBet);
+            dom.session.suggestedBet.textContent = clpFormatter.format(sessionData.unitBet * betMultiplier);
+            dom.session.winTarget.textContent = clpFormatter.format(sessionData.winTarget);
+            dom.session.lossTarget.textContent = clpFormatter.format(sessionData.lossTarget);
+            dom.session.current.style.color = sessionData.current >= sessionData.initial ? COLORS.win : COLORS.loss;
+            updateSessionGaugeChart();
+        }
+
+        const canBet = trueCount >= 1.5 && sessionData.isActive;
+        document.getElementById('end-hand-btn-bet').disabled = !canBet;
+
+        if (!sessionData.isActive) {
+            dom.decisionBox.textContent = "Inicie una sesión para comenzar a apostar.";
+            dom.decisionBox.className = '';
+        } else if (canBet) {
+            dom.decisionBox.innerHTML = `🎯 APOSTAR <span>(TC: ${trueCount.toFixed(2)})</span>`;
+            dom.decisionBox.className = 'decision-good';
+        } else {
+            dom.decisionBox.innerHTML = `⚠️ OBSERVAR <span>(TC: ${trueCount.toFixed(2)})</span>`;
+            dom.decisionBox.className = 'decision-bad';
+        }
+        dom.currentHandCards.textContent = "";
+
+        updateCapitalChart();
+        updateAnalyticalChart();
+        updateBetStatsPieChart();
+        updateAllStatsPieChart();
+    }
+
+    // --- GRÁFICOS ---
+    function updateCapitalChart() {
+        if (!capitalChart || appData.genesis === 0) return;
+        const PROJECTION_SESSIONS = 50;
+        const realLog = appData.log.filter(e => e.type !== 'deposit');
+        const realData = [appData.genesis, ...realLog.map(e => e.final)];
+        const idealData = [appData.genesis];
+        for (let i = 0; i < PROJECTION_SESSIONS; i++) idealData.push(idealData[i] * 1.10);
+        const realisticData = [appData.genesis];
+        let currentRealistic = appData.genesis;
+        for (let i = 0; i < PROJECTION_SESSIONS; i++) {
+            const betForSession = calculateBetUnit(currentRealistic, parseFloat(dom.inputs.betPercentage.value) || 1.5);
+            currentRealistic += (2 * betForSession);
+            realisticData.push(currentRealistic);
+        }
+        const projectionCategories = ['Inicio', ...Array.from({length: PROJECTION_SESSIONS}, (_, i) => `S${i + 1}`)];
+        capitalChart.setOption({
+            backgroundColor: 'transparent',
+            tooltip: { trigger: 'axis', valueFormatter: (value) => clpFormatter.format(value) },
+            legend: { data: ['Balance Real', 'Proyección Realista', 'Proyección Ideal'], textStyle: { color: '#ccc' } },
+            grid: { left: '3%', right: '4%', bottom: '15%', containLabel: true },
+            xAxis: { type: 'category', boundaryGap: false, data: projectionCategories }, 
+            yAxis: { type: 'value', axisLabel: { formatter: (value) => clpFormatter.format(value).replace('$', '') } },
+            dataZoom: [ { type: 'slider', start: 0, end: 100, bottom: 10 }, { type: 'inside' } ],
+            series: [
+                { name: 'Balance Real', type: 'line', smooth: true, data: realData, itemStyle: { color: COLORS.win }, lineStyle: { width: 3 }, showSymbol: true },
+                { name: 'Proyección Realista', type: 'line', smooth: true, data: realisticData, itemStyle: { color: COLORS.realistic }, lineStyle: { type: 'dashed', opacity: 0.8 }, showSymbol: false },
+                { name: 'Proyección Ideal', type: 'line', smooth: true, data: idealData, itemStyle: { color: COLORS.ideal }, lineStyle: { type: 'dashed', opacity: 0.8 }, showSymbol: false },
+            ]
+        }, true);
+    }
+    
+    function updateAnalyticalChart() {
+        if (!analyticalChart || !appData.countData.history) return;
+        const history = appData.countData.history;
+        analyticalChart.setOption({
+            backgroundColor: 'transparent',
+            tooltip: {
+                trigger: 'axis', axisPointer: { type: 'cross' },
+                formatter: (params) => {
+                    const dataIndex = params[0].dataIndex;
+                    if (dataIndex === undefined || !history[dataIndex]) return '';
+                    const d = history[dataIndex];
+                    let r = d.result.charAt(0).toUpperCase() + d.result.slice(1);
+                    let betText = d.betAmount > 0 ? `Apuesta: ${clpFormatter.format(d.betAmount)} | ` : '';
+                    if (d.result === 'blackjack') r = 'Blackjack';
+                    if (d.result === 'observe') r = 'Observada';
+                    return `<b>Mano ${d.mano}</b><br/>TC: ${d.tc.toFixed(2)} | Ventaja: ${(d.advantage * 100).toFixed(2)}%<br/>${betText}Resultado: ${r}`;
+                }
+            },
+            legend: { data: ['Conteo Verdadero', 'Ventaja Estimada (%)', 'Resultado'], textStyle: { color: '#ccc' } },
+            grid: { left: '3%', right: '4%', bottom: '10%', containLabel: true },
+            xAxis: { type: 'category', boundaryGap: true, data: history.map(h => `Mano ${h.mano}`) },
+            yAxis: [
+                { type: 'value', name: 'Conteo / Resultado', splitLine: { lineStyle: { color: '#444', type: 'dashed' } } },
+                { type: 'value', name: 'Ventaja (%)', position: 'right', axisLabel: { formatter: '{value}%' }, splitLine: { show: false } }
+            ],
+            dataZoom: [ { type: 'inside' }, { type: 'slider', height: 20, bottom: 5 } ],
+            series: [
+                { name: 'Conteo Verdadero', type: 'line', smooth: true, data: history.map(h => h.tc.toFixed(2)), lineStyle: { color: COLORS.blackjack, width: 3 } },
+                { name: 'Resultado', type: 'bar', yAxisIndex: 0, data: history.map(h => ({ value: h.resultValue, itemStyle: { color: h.betAmount > 0 ? (h.resultValue > 0 ? COLORS.win : (h.resultValue < 0 ? COLORS.loss : COLORS.push)) : COLORS.observe } })), barWidth: '40%' },
+                { name: 'Ventaja Estimada (%)', type: 'line', yAxisIndex: 1, smooth: true, data: history.map(h => (h.advantage * 100).toFixed(2)), lineStyle: { color: '#03a9f4', type: 'dashed', opacity: 0.7 } }
+            ]
+        }, true);
+    }
+
+    function createPieChart(chartInstance, hands, title) {
+        if (!chartInstance) return;
+        const stats = { win: 0, loss: 0, blackjack: 0, push: 0, observe: 0 };
+        hands.forEach(h => { stats[h.result]++; });
+        
+        const chartData = [
+            { value: stats.blackjack, name: 'Blackjacks', itemStyle: { color: COLORS.blackjack } },
+            { value: stats.win, name: 'Victorias', itemStyle: { color: COLORS.win } },
+            { value: stats.loss, name: 'Derrotas', itemStyle: { color: COLORS.loss } },
+            { value: stats.push, name: 'Empates', itemStyle: { color: COLORS.push } }
+        ];
+
+        if (stats.observe > 0) {
+            chartData.push({ value: stats.observe, name: 'Observadas', itemStyle: { color: COLORS.observe } });
+        }
+        
+        chartInstance.setOption({
+            backgroundColor: 'transparent',
+            tooltip: { trigger: 'item', formatter: '{b}: {c} ({d}%)' },
+            series: [{
+                name: title, type: 'pie', radius: ['50%', '70%'],
+                itemStyle: { borderRadius: 10, borderColor: 'var(--surface-color)', borderWidth: 2 },
+                label: { show: hands.length > 0, position: 'inside', formatter: '{d}%', color: '#fff', fontSize: 14, fontWeight: 'bold' },
+                data: chartData.filter(d => d.value > 0)
+            }],
+            graphic: { type: 'text', left: 'center', top: 'center', style: { text: hands.length > 0 ? `${title}\n${hands.length}` : 'Sin Manos', textAlign: 'center', fill: '#fff', fontSize: 24 } }
+        }, true);
+    }
+    
+    function updateBetStatsPieChart() {
+        const handsBet = appData.countData.history.filter(h => h.betAmount > 0);
+        createPieChart(betStatsPieChart, handsBet, 'Apostadas');
+    }
+    
+    function updateAllStatsPieChart() {
+        createPieChart(allStatsPieChart, appData.countData.history, 'Totales');
+    }
+
+    function updateSessionGaugeChart() {
+        if (!sessionGaugeChart || !sessionData.isActive) return;
+        const profit = sessionData.current - sessionData.initial;
+        const range = (sessionData.winTarget - sessionData.initial) + (sessionData.initial - sessionData.lossTarget);
+        const percentage = range > 0 ? ((profit + (sessionData.initial - sessionData.lossTarget)) / range) * 100 : 0;
+        sessionGaugeChart.setOption({
+            backgroundColor: 'transparent',
+            series: [{
+                type: 'gauge', startAngle: 180, endAngle: 0, min: 0, max: 100,
+                progress: { show: true, roundCap: true, width: 18, itemStyle: { color: profit >= 0 ? COLORS.win : COLORS.loss } },
+                pointer: { show: false }, axisLine: { lineStyle: { width: 18, color: [[1, '#444']] } },
+                detail: {
+                    offsetCenter: [0, '0%'], valueAnimation: true,
+                    formatter: () => `{profit|${clpFormatter.format(profit)}}`,
+                    rich: { profit: { fontSize: 36, fontWeight: 'bolder', color: profit >= 0 ? COLORS.win : COLORS.loss } }
+                },
+                data: [{ value: Math.min(100, Math.max(0, parseFloat(percentage.toFixed(1)))) }]
+            }]
+        }, true);
+    }
+    
+    document.addEventListener('DOMContentLoaded', () => {
+        dom = {
+            stats: { genesis: document.getElementById('genesis-capital'), current: document.getElementById('current-capital'), net: document.getElementById('net-profit'), hands: document.getElementById('hands-played'), trueCount: document.getElementById('true-count-display'), successProb: document.getElementById('success-prob-display') },
+            panels: { setup: document.getElementById('setup-panel'), nextSession: document.getElementById('next-session-panel'), sessionTracker: document.getElementById('session-tracker-panel'), sessionForm: document.getElementById('session-form'), lockout: document.getElementById('lockout-message'), register: document.getElementById('register-panel'), result: document.getElementById('result-panel') },
+            inputs: { initialInvestment: document.getElementById('initial-investment'), betPercentage: document.getElementById('bet-percentage'), stopWinUnits: document.getElementById('stop-win-units'), stopLossUnits: document.getElementById('stop-loss-units'), addFunds: document.getElementById('add-funds-input'), actualBet: document.getElementById('actual-bet-input') },
+            session: { initial: document.getElementById('session-initial-balance'), current: document.getElementById('session-current-balance'), unitBet: document.getElementById('session-bet-unit'), suggestedBet: document.getElementById('session-suggested-bet'), winTarget: document.getElementById('session-win-target'), lossTarget: document.getElementById('session-loss-target') },
+            currentHandCards: document.getElementById('current-hand-cards'),
+            decisionBox: document.getElementById('decision-box'),
+            modals: { strategy: document.getElementById('strategy-modal'), info: document.getElementById('info-modal') },
+            buttons: { closeStrategy: document.getElementById('close-strategy-modal'), closeInfo: document.getElementById('close-info-modal'), info: document.getElementById('info-button'), deleteLastCard: document.getElementById('delete-last-card-btn') }
+        };
+
+        capitalChart = echarts.init(document.getElementById('capital-chart-container'), 'dark');
+        analyticalChart = echarts.init(document.getElementById('analytical-chart-container'), 'dark');
+        betStatsPieChart = echarts.init(document.getElementById('bet-stats-pie-chart'), 'dark');
+        allStatsPieChart = echarts.init(document.getElementById('all-stats-pie-chart'), 'dark');
+        sessionGaugeChart = echarts.init(document.getElementById('session-chart-container'), 'dark');
+        
+        const cardGrid = document.querySelector('.card-input-grid');
+        CARD_MAP.forEach(card => {
+            const btn = document.createElement('button');
+            btn.type = 'button'; btn.textContent = card; btn.className = 'card-button';
+            btn.addEventListener('click', () => registerCard(card));
+            cardGrid.appendChild(btn);
+        });
+
+        document.querySelectorAll('.tab-button').forEach(button => {
+            button.addEventListener('click', () => {
+                document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+                button.classList.add('active');
+                document.getElementById(button.dataset.tab).classList.add('active');
+            });
+        });
+
+        document.getElementById('start-first-session').addEventListener('click', startFirstSession);
+        document.getElementById('start-new-session').addEventListener('click', startNewSession);
+        document.getElementById('end-session-manually').addEventListener('click', () => endSession(true));
+        document.getElementById('add-funds-btn').addEventListener('click', addFunds);
+        document.getElementById('end-hand-btn-bet').addEventListener('click', () => processHand(true));
+        document.getElementById('end-hand-btn-observe').addEventListener('click', () => processHand(false));
+        document.getElementById('reset-app-btn').addEventListener('click', resetApplication);
+        document.getElementById('reset-shoe-btn').addEventListener('click', resetShoe);
+        document.getElementById('show-strategy-btn').addEventListener('click', () => dom.modals.strategy.style.display = 'flex');
+        
+        document.getElementById('btn-win').addEventListener('click', () => registerResult('win'));
+        document.getElementById('btn-lose').addEventListener('click', () => registerResult('loss'));
+        document.getElementById('btn-blackjack').addEventListener('click', () => registerResult('blackjack'));
+        document.getElementById('btn-push').addEventListener('click', () => registerResult('push'));
+        
+        dom.buttons.info.addEventListener('click', () => dom.modals.info.style.display = 'flex');
+        dom.buttons.closeStrategy.addEventListener('click', () => dom.modals.strategy.style.display = 'none');
+        dom.buttons.closeInfo.addEventListener('click', () => dom.modals.info.style.display = 'none');
+        dom.buttons.deleteLastCard.addEventListener('click', deleteLastCard);
+        
+        window.addEventListener('click', (event) => { 
+            if (event.target == dom.modals.strategy) dom.modals.strategy.style.display = 'none';
+            if (event.target == dom.modals.info) dom.modals.info.style.display = 'none';
+        });
+        
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('service-worker.js').catch(err => {
+                console.error('Service Worker registration failed:', err);
+            });
+        }
+        
+        loadData();
+    });
+</script>
+</body>
+</html>
