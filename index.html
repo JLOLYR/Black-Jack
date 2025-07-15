@@ -8,7 +8,7 @@
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icons/icon-192x192.png">
 
-    <title>Blackjack Dashboard Pro</title>
+    <title>Blackjack Pro - Griffin Ultimate Count</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
@@ -99,7 +99,6 @@
         .modal-content-wrapper strong { color: var(--primary-color); }
         .modal-close { position: absolute; top: 15px; right: 25px; color: #f1f1f1; font-size: 40px; font-weight: bold; cursor: pointer; }
         
-        /* --- NUEVO FOOTER --- */
         footer {
             width: 100%;
             max-width: 1360px;
@@ -120,7 +119,6 @@
             text-decoration: underline;
         }
         
-        /* --- RESPONSIVE DESIGN --- */
         @media (max-width: 1000px) {
             .main-container { flex-direction: column; }
             .left-column, .right-column { max-width: 100%; min-width: 100%; }
@@ -151,7 +149,7 @@
     <div class="panel" style="width: 100%; max-width: 1360px; box-sizing: border-box;">
         <div class="title-container">
             <button class="icon-btn" id="show-strategy-btn" title="Mostrar Tabla de Estrategia">🂡</button>
-            <h2>Blackjack Dashboard Pro</h2>
+            <h2>Blackjack Pro: Griffin Count</h2>
             <button class="icon-btn" id="reset-app-btn" title="Reiniciar Aplicación Completa">🔄</button>
         </div>
         <div id="global-stats">
@@ -261,7 +259,7 @@
     </div>
     
     <!-- Modals -->
-    <div id="strategy-modal" class="modal"><span class="modal-close" id="close-strategy-modal">×</span><img class="modal-content-wrapper" src="estrategia-blackjack.jpg" alt="Tabla de Estrategia de Blackjack"></div>
+    <div id="strategy-modal" class="modal"><span class="modal-close" id="close-strategy-modal">×</span><img class="modal-content-wrapper" src="https://upload.wikimedia.org/wikipedia/commons/d/d4/Blackjack_basic_strategy_-_3_decks.svg" alt="Tabla de Estrategia de Blackjack"></div>
     <div id="info-modal" class="modal">
         <div class="modal-content-wrapper">
             <span class="modal-close" id="close-info-modal">×</span>
@@ -273,15 +271,15 @@
                 <li><strong>Iniciar Sesión de Apuestas:</strong> Antes de apostar, debes iniciar una sesión. Aquí defines tu <strong>Apuesta Unidad</strong> (un % pequeño de tu capital total) y tus límites de <strong>Stop-Win</strong> (meta de ganancia) y <strong>Stop-Loss</strong> (límite de pérdida).</li>
                 <li><strong>Límite de Sesiones:</strong> Para evitar la fatiga y el juego impulsivo, solo puedes iniciar <strong>3 sesiones de apuestas cada 12 horas</strong>. El contador se reinicia automáticamente.</li>
             </ul>
-            <h3>2. Análisis y Conteo (Omega II)</h3>
-            <p>Aquí es donde aplicas la estrategia. El sistema de conteo Omega II te ayuda a saber cuándo la baraja es favorable.</p>
+            <h3>2. Análisis y Conteo (Griffin Ultimate)</h3>
+            <p>Aquí es donde aplicas la estrategia. El sistema de conteo <strong>Griffin Ultimate</strong>, más preciso que otros, te ayuda a saber cuándo la baraja es favorable.</p>
             <ul>
                 <li><strong>Conteo Verdadero (TC):</strong> Es el indicador más importante. Un <code>TC positivo</code> significa que hay más cartas altas, lo cual es bueno para ti. Un <code>TC negativo</code> es bueno para la casa.</li>
                 <li><strong>Prob. Éxito Próxima:</strong> Combina la probabilidad base de ganar en Blackjack (aprox. 50.7%) con la ventaja que te da el TC. Te da una expectativa matemática para la siguiente mano.</li>
                 <li><strong>Registro de Manos:</strong>
                     <ul>
                         <li><button disabled style="background-color: var(--observe-color); color: white; padding: 5px; font-size: 0.8em; width: auto; margin:0;">👁️ Observar</button>: Usa este botón cuando el TC es bajo. Registras las cartas para mantener el conteo, pero sin arriesgar dinero.</li>
-                        <li><button disabled style="background-color: var(--blackjack-color); color: black; padding: 5px; font-size: 0.8em; width: auto; margin:0;">💰 Apostar</button>: Este botón se activa solo cuando el TC es favorable (>= 1.5). Al usarlo, se te sugerirá una apuesta, pero podrás ajustarla manualmente antes de registrar el resultado.</li>
+                        <li><button disabled style="background-color: var(--blackjack-color); color: black; padding: 5px; font-size: 0.8em; width: auto; margin:0;">💰 Apostar</button>: Este botón se activa solo cuando el TC es favorable (>= 2). Al usarlo, se te sugerirá una apuesta, pero podrás ajustarla manualmente antes de registrar el resultado.</li>
                     </ul>
                 </li>
                  <li><strong>Reiniciar Conteo (🔀):</strong> Usa este botón cuando el crupier baraja las cartas o cambia el zapato. Esto reinicia todo el análisis del zapato actual (conteo, historial de manos, distribución), pero <strong>no afecta tu capital ni tu sesión de juego actual</strong>.</li>
@@ -307,15 +305,20 @@
     </footer>
 
 <script>
-    // --- CÓDIGO JAVASCRIPT FINAL (SIN CAMBIOS) ---
-    // (El código JS de la respuesta anterior ya es compatible y está completo)
-    const DATA_KEY = 'blackjackDashboardProV10';
+    const DATA_KEY = 'blackjackDashboard_Griffin_v1';
     const COLORS = { win: '#1da821', loss: '#f44336', blackjack: '#ffc107', push: '#757575', observe: '#03a9f4', suggestedBet: '#29b6f6', ideal: '#03a9f4', realistic: '#ffc107' };
     const CARD_MAP = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
-    const OMEGA_II_VALUES = { '2': 1, '3': 1, '7': 1, '4': 2, '5': 2, '6': 2, '8': 0, 'A': 0, '9': -1, '10': -2, 'J': -2, 'Q': -2, 'K': -2 };
+    
+    const GRIFFIN_VALUES = {
+        '2': 0.56, '3': 0.89, '4': 1.00, '5': 1.29, '6': 0.75, '7': 0.00,
+        '8': -0.24, '9': -0.66, '10': -1.00, 'J': -1.00, 'Q': -1.00, 'K': -1.00, 'A': -0.94
+    };
+
     const BASE_SUCCESS_PROBABILITY = 0.507;
     const MAX_SESSIONS = 3;
     const SESSION_WINDOW_HOURS = 12;
+    const BET_TRIGGER_TC = 2; // Umbral de TC para recomendar una apuesta
+
     const clpFormatter = new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', minimumFractionDigits: 0, maximumFractionDigits: 0 });
 
     let appData = { 
@@ -329,7 +332,6 @@
     let dom = {};
     let capitalChart, analyticalChart, betStatsPieChart, allStatsPieChart, sessionGaugeChart;
     
-    // --- LÓGICA DE DATOS Y ESTADO ---
     function saveData() { localStorage.setItem(DATA_KEY, JSON.stringify(appData)); }
     function loadData() {
         const storedData = localStorage.getItem(DATA_KEY);
@@ -369,7 +371,6 @@
         }
     }
 
-    // --- LÓGICA DE CAPITAL Y SESIONES ---
     function getCurrentCapital() { return appData.log.length > 0 ? appData.log[appData.log.length - 1].final : appData.genesis; }
     function calculateBetUnit(capital, percentage) { return Math.max(1000, Math.floor((capital * (percentage / 100)) / 1000) * 1000); }
 
@@ -392,13 +393,11 @@
     function startNewSession() {
         if(checkSessionLock()) return;
         if (appData.sessionControl.startTime === 0 || !appData.sessionControl.startTime) appData.sessionControl.startTime = Date.now();
-        
         const lastBalance = getCurrentCapital();
         const percentage = parseFloat(dom.inputs.betPercentage.value) || 1.5;
         const unitBet = calculateBetUnit(lastBalance, percentage);
         const winUnits = parseInt(dom.inputs.stopWinUnits.value) || 5;
         const lossUnits = parseInt(dom.inputs.stopLossUnits.value) || 7;
-        
         sessionData = { 
             initial: lastBalance, current: lastBalance, unitBet: unitBet,
             winTarget: lastBalance + (winUnits * unitBet), 
@@ -446,29 +445,25 @@
         return false;
     }
 
-    // --- LÓGICA DE CONTEO Y JUEGO ---
     function getTrueCount() {
         const decksRemaining = ((appData.countData.numDecks * 52) - appData.countData.cardsSeen) / 52;
         if (decksRemaining < 1) return appData.countData.runningCount / 1;
         return appData.countData.runningCount / Math.max(1, decksRemaining);
     }
-    function getPlayerAdvantage(trueCount) { return (trueCount - 1) * 0.005; }
+    function getPlayerAdvantage(trueCount) { return trueCount * 0.005; } // Calibrado para sistemas de alto nivel
     function getSuccessProbability(advantage) { return BASE_SUCCESS_PROBABILITY + advantage; }
     function registerCard(card) {
         currentHand.push(card);
         dom.currentHandCards.textContent = currentHand.join(', ');
     }
     function deleteLastCard() {
-        if (currentHand.length > 0) {
-            currentHand.pop();
-            dom.currentHandCards.textContent = currentHand.join(', ');
-        }
+        if (currentHand.length > 0) { currentHand.pop(); dom.currentHandCards.textContent = currentHand.join(', '); }
     }
     function processHand(isBetting) {
         if (currentHand.length === 0) { alert("No has registrado ninguna carta para esta mano."); return; }
         if (isBetting && !sessionData.isActive) { alert("Debes iniciar una sesión de juego para poder apostar."); return; }
         currentHand.forEach(card => {
-            appData.countData.runningCount += OMEGA_II_VALUES[card];
+            appData.countData.runningCount += GRIFFIN_VALUES[card];
             appData.countData.cardsSeen++;
             if (!appData.countData.cardDistribution[card]) appData.countData.cardDistribution[card] = 0;
             appData.countData.cardDistribution[card]++;
@@ -515,7 +510,6 @@
         }
     }
 
-    // --- ACTUALIZACIÓN DE UI Y GRÁFICOS ---
     function updateAllUI() {
         const capital = getCurrentCapital();
         const trueCount = getTrueCount();
@@ -541,7 +535,7 @@
             dom.session.current.style.color = sessionData.current >= sessionData.initial ? COLORS.win : COLORS.loss;
             updateSessionGaugeChart();
         }
-        const canBet = trueCount >= 1.5 && sessionData.isActive;
+        const canBet = trueCount >= BET_TRIGGER_TC && sessionData.isActive;
         document.getElementById('end-hand-btn-bet').disabled = !canBet;
         if (!sessionData.isActive) {
             dom.decisionBox.textContent = "Inicie una sesión para comenzar a apostar.";
@@ -559,7 +553,7 @@
         updateBetStatsPieChart();
         updateAllStatsPieChart();
     }
-    // --- GRÁFICOS ---
+    
     function updateCapitalChart() {
         if (!capitalChart || appData.genesis === 0) return;
         const PROJECTION_SESSIONS = 50;
@@ -579,7 +573,7 @@
             backgroundColor: 'transparent',
             tooltip: { trigger: 'axis', valueFormatter: (value) => clpFormatter.format(value) },
             legend: { data: ['Balance Real', 'Proyección Realista', 'Proyección Ideal'], textStyle: { color: '#ccc' } },
-            grid: { left: '3%', right: '4%', bottom: '15%', containLabel: true },
+            grid: { left: '8%', right: '4%', bottom: '15%', containLabel: true },
             xAxis: { type: 'category', boundaryGap: false, data: projectionCategories }, 
             yAxis: { type: 'value', axisLabel: { formatter: (value) => clpFormatter.format(value).replace('$', '') } },
             dataZoom: [ { type: 'slider', start: 0, end: 100, bottom: 10 }, { type: 'inside' } ],
@@ -609,7 +603,7 @@
                 }
             },
             legend: { data: ['Conteo Verdadero', 'Ventaja Estimada (%)', 'Resultado'], textStyle: { color: '#ccc' } },
-            grid: { left: '3%', right: '4%', bottom: '10%', containLabel: true },
+            grid: { left: '8%', right: '8%', bottom: '10%', containLabel: true },
             xAxis: { type: 'category', boundaryGap: true, data: history.map(h => `Mano ${h.mano}`) },
             yAxis: [
                 { type: 'value', name: 'Conteo / Resultado', splitLine: { lineStyle: { color: '#444', type: 'dashed' } } },
@@ -682,13 +676,11 @@
             modals: { strategy: document.getElementById('strategy-modal'), info: document.getElementById('info-modal') },
             buttons: { closeStrategy: document.getElementById('close-strategy-modal'), closeInfo: document.getElementById('close-info-modal'), infoLink: document.getElementById('info-link'), deleteLastCard: document.getElementById('delete-last-card-btn') }
         };
-
         capitalChart = echarts.init(document.getElementById('capital-chart-container'), 'dark');
         analyticalChart = echarts.init(document.getElementById('analytical-chart-container'), 'dark');
         betStatsPieChart = echarts.init(document.getElementById('bet-stats-pie-chart'), 'dark');
         allStatsPieChart = echarts.init(document.getElementById('all-stats-pie-chart'), 'dark');
         sessionGaugeChart = echarts.init(document.getElementById('session-chart-container'), 'dark');
-        
         const cardGrid = document.querySelector('.card-input-grid');
         CARD_MAP.forEach(card => {
             const btn = document.createElement('button');
@@ -696,7 +688,6 @@
             btn.addEventListener('click', () => registerCard(card));
             cardGrid.appendChild(btn);
         });
-
         document.querySelectorAll('.tab-button').forEach(button => {
             button.addEventListener('click', () => {
                 document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
@@ -705,7 +696,6 @@
                 document.getElementById(button.dataset.tab).classList.add('active');
             });
         });
-
         document.getElementById('start-first-session').addEventListener('click', startFirstSession);
         document.getElementById('start-new-session').addEventListener('click', startNewSession);
         document.getElementById('end-session-manually').addEventListener('click', () => endSession(true));
@@ -715,22 +705,18 @@
         document.getElementById('reset-app-btn').addEventListener('click', resetApplication);
         document.getElementById('reset-shoe-btn').addEventListener('click', resetShoe);
         document.getElementById('show-strategy-btn').addEventListener('click', () => dom.modals.strategy.style.display = 'flex');
-        
         document.getElementById('btn-win').addEventListener('click', () => registerResult('win'));
         document.getElementById('btn-lose').addEventListener('click', () => registerResult('loss'));
         document.getElementById('btn-blackjack').addEventListener('click', () => registerResult('blackjack'));
         document.getElementById('btn-push').addEventListener('click', () => registerResult('push'));
-        
         dom.buttons.infoLink.addEventListener('click', (e) => { e.preventDefault(); dom.modals.info.style.display = 'flex'; });
         dom.buttons.closeStrategy.addEventListener('click', () => dom.modals.strategy.style.display = 'none');
         dom.buttons.closeInfo.addEventListener('click', () => dom.modals.info.style.display = 'none');
         dom.buttons.deleteLastCard.addEventListener('click', deleteLastCard);
-        
         window.addEventListener('click', (event) => { 
             if (event.target == dom.modals.strategy) dom.modals.strategy.style.display = 'none';
             if (event.target == dom.modals.info) dom.modals.info.style.display = 'none';
         });
-        
         const debouncedResize = debounce(() => {
             if(capitalChart) capitalChart.resize();
             if(analyticalChart) analyticalChart.resize();
@@ -738,25 +724,16 @@
             if(allStatsPieChart) allStatsPieChart.resize();
             if(sessionData.isActive && sessionGaugeChart) sessionGaugeChart.resize();
         }, 150);
-
         window.addEventListener('resize', debouncedResize);
-
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('service-worker.js').catch(err => {
-                console.error('Service Worker registration failed:', err);
-            });
+            navigator.serviceWorker.register('service-worker.js').catch(err => console.error('Service Worker registration failed:', err));
         }
-        
         loadData();
     });
-
     function debounce(func, wait) {
         let timeout;
         return function executedFunction(...args) {
-            const later = () => {
-                clearTimeout(timeout);
-                func(...args);
-            };
+            const later = () => { clearTimeout(timeout); func(...args); };
             clearTimeout(timeout);
             timeout = setTimeout(later, wait);
         };
